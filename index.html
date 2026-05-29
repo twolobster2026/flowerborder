@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>花境设计系统 | FBDMS · 专业安全版</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-soft:#eff6ff;
+  --border:#e5e7eb;
+  --bg:#f5f7fb;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --card-radius:12px;
+  --shadow:0 8px 24px rgba(0,0,0,.06);
+  --success:#10b981;
+  --danger:#ef4444;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.7;
+  overflow: auto;
+}
+body.modal-open {
+  overflow: hidden;
+}
+
+/* 登录遮罩层 */
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.login-modal {
+  background: white;
+  border-radius: 24px;
+  width: 380px;
+  max-width: 90%;
+  padding: 32px 28px;
+  box-shadow: 0 25px 40px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.login-modal h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: #1e293b;
+}
+.login-modal .sub {
+  color: #666;
+  margin-bottom: 28px;
+  font-size: 14px;
+}
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: 0.2s;
+}
+.login-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+}
+.remember-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0 20px;
+  font-size: 14px;
+}
+.btn-login {
+  background: var(--primary);
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-login:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+.error-msg {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 12px;
+  min-height: 40px;
+}
+.countdown-tip {
+  color: #f97316;
+  font-size: 13px;
+}
+
+/* 主内容半透明遮罩效果 (未登录时) */
+.main-content {
+  transition: opacity 0.2s, filter 0.2s;
+}
+.main-content.disabled {
+  opacity: 0.5;
+  filter: blur(1px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 原有样式保持不变 */
+.header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+}
+.header-content{
+  max-width:1200px;
+  margin:auto;
+  padding:28px 20px;
+}
+.header h1{
+  margin:0;
+  font-size:28px;
+  font-weight:700;
+  letter-spacing:-0.3px;
+}
+.header h1 small{
+  font-size:14px;
+  font-weight:400;
+  color:var(--primary);
+  margin-left:10px;
+}
+.header p{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:15px;
+  letter-spacing:0.2px;
+}
+.header .eng-sub{
+  font-size:13px;
+  color:#8b9eb0;
+  margin-top:4px;
+  letter-spacing:0.5px;
+}
+.container{
+  max-width:1200px;
+  margin:32px auto;
+  padding:0 16px;
+}
+.card{
+  background:#fff;
+  border-radius:var(--card-radius);
+  box-shadow:var(--shadow);
+  padding:28px;
+  margin-bottom:32px;
+}
+.card-title{
+  font-size:20px;
+  font-weight:700;
+  padding-left:12px;
+  border-left:4px solid var(--primary);
+  margin:0 0 20px;
+}
+.section-title{
+  font-size:16px;
+  font-weight:600;
+  margin:32px 0 16px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+}
+.hidden{
+  display:none !important;
+}
+.btn-group{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.btn{
+  background:#2b8fed;
+  color:#fff;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition: all 0.2s;
+}
+.btn-secondary{background:#fff;color:#2b8fed;border: 1px solid #2b8fed;}
+.btn-save{background:#2b8fed;color:#fff;}
+.btn-load{background:#fff;color:#2b8fed;border: 1px solid #2b8fed;}
+.btn-accent{background:#2b8fed;color:#fff;}
+.btn-outline-green{background:#fff;color:#10b981;border:1px solid #10b981;}
+.btn-outline-green:hover{background:#f0fdf4;}
+.btn:disabled, .btn-secondary:disabled, .btn-accent:disabled {
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.btn:hover, .btn-save:hover, .btn-accent:hover { background: #5aa9f0; }
+.btn-secondary:hover, .btn-load:hover { background: #eef5ff; border-color: #1f6bbd; color: #1f6bbd; }
+
+.table-container{
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  padding:12px 10px;
+  border-bottom:1px solid var(--border);
+  text-align: left;
+}
+th{
+  background:#f9fafb;
+  font-weight:600;
+}
+tr:hover{
+  background:#f1f5ff;
+}
+.role-analysis, .color-analysis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+}
+.analysis-card{
+  background:#f9fafb;
+  border-left:4px solid var(--primary);
+  padding:16px 18px;
+  border-radius:10px;
+  text-align:left;
+}
+.analysis-card h4{
+  margin:0 0 10px;
+  font-size:15px;
+  display:flex;
+  justify-content:space-between;
+}
+.count{
+  background:var(--primary);
+  color:#fff;
+  padding:2px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+.analysis-list{
+  padding-left:18px;
+  margin:0;
+}
+.muted{ color:var(--muted); }
+.color-dot{
+  display:inline-block;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  margin-right:6px;
+  vertical-align:middle;
+  border:1px solid rgba(0,0,0,.15);
+}
+.project-info{
+  display:flex;
+  flex-wrap:wrap;
+  gap:24px;
+  background:#f9fafb;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:28px;
+}
+.project-field{
+  flex:1;
+  min-width:180px;
+}
+.project-field label{
+  font-weight:600;
+  display:block;
+  margin-bottom:8px;
+  color:var(--text);
+}
+.project-field input{
+  width:100%;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:14px;
+}
+.total-percent{
+  font-weight:700;
+  font-size:24px;
+  margin-top:8px;
+}
+.total-percent.green{ color:#10b981; }
+.total-percent.red{ color:#ef4444; }
+.seedling-table-container{
+  margin-top:20px;
+  background:white;
+  border-radius:12px;
+  overflow-x:auto;
+}
+.seedling-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.seedling-table th{
+  background:#2b8fed;
+  color:white;
+  padding:12px 10px;
+  font-weight:600;
+}
+.seedling-table td{
+  padding:10px;
+  border-bottom:1px solid #e2e8f0;
+}
+.seedling-table tr:hover{
+  background:#f8fafc;
+}
+.seedling-table .clickable-plant{
+  cursor:pointer;
+  color:#2563eb;
+  font-weight:500;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.bloom-table th, .bloom-table td{
+  text-align:center;
+  font-size:14px;
+  font-family:inherit;
+  padding: 4px 6px;
+}
+.bloom-name{
+  text-align:left;
+  font-weight: normal;
+}
+.bloom-table th{
+  font-weight:600;
+}
+.image-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.image-modal-content {
+  max-width: 80vw;
+  max-height: 80vh;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.image-modal-content img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 12px;
+}
+.image-modal-content p {
+  margin-top: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+footer{
+  text-align:center;
+  color:#888;
+  font-size:13px;
+  margin:40px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- 登录模态框 -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-modal">
+    <h2>花境设计系统</h2>
+    <div class="sub">FBDMS · 专业安全版</div>
+    <input type="text" id="loginUsername" class="login-input" placeholder="用户名" autocomplete="off">
+    <input type="password" id="loginPassword" class="login-input" placeholder="密码">
+    <div class="remember-row">
+      <label style="display: flex; align-items: center; gap: 6px;">
+        <input type="checkbox" id="rememberCheckbox"> 记住我（7天）
+      </label>
+    </div>
+    <button id="loginBtn" class="btn-login">登录系统</button>
+    <div id="loginError" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- 主内容区域 -->
+<div id="mainContent" class="main-content disabled">
+  <div class="header">
+    <div class="header-content">
+      <h1>花境设计系统<small>FBDMS</small></h1>
+      <p>生态花境智能配置平台 · 植物角色管理 · 花期可视化 · 精准苗木表生成</p>
+      <div class="eng-sub">Flower Border Design & Management System | Smart planting · Ecological harmony · Full-cycle control</div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">项目信息</h2>
+      <div class="project-info">
+        <div class="project-field">
+          <label>项目名称</label>
+          <input type="text" id="projectName" placeholder="例：社区花园、滨水花境..." value="我的花境项目">
+        </div>
+        <div class="project-field">
+          <label>花境面积 (平米)</label>
+          <input type="number" id="projectArea" placeholder="总面积" value="100" step="0.1">
+        </div>
+        <div class="project-field">
+          <label>设计完成占比总和</label>
+          <div id="totalPercentDisplay" class="total-percent green">0%</div>
+          <small>根据各品种“花境占比%”自动汇总</small>
+        </div>
+      </div>
+    </div>
+    <section id="design">
+      <div class="card">
+        <h2 class="card-title">花境设计 · 品种配置表</h2>
+        <div class="btn-group">
+          <button class="btn" id="genListBtn">生成设计清单</button>
+          <button class="btn btn-secondary" id="resetBtn">重置选择</button>
+          <button class="btn btn-save" id="saveSchemeBtn">保存方案</button>
+          <button class="btn btn-load" id="loadSchemeBtn">加载方案</button>
+          <button class="btn btn-accent" id="exportPdfBtn">导出PDF报告</button>
+          <button class="btn btn-secondary" id="quickDownBtn">快速下看</button>
+          <input type="file" id="loadStateFileInput" accept=".json" style="display: none;">
+        </div>
+        <div id="flowerSelection"></div>
+      </div>
+      <div id="pdfContent">
+        <div id="designOutput" class="card hidden"></div>
+        <div id="designBloom" class="card hidden"></div>
+      </div>
+      <div id="seedlingSection" class="card hidden">
+        <h2 class="card-title" id="seedlingTitle">苗木表</h2>
+        <div id="seedlingTableContainer" class="seedling-table-container"></div>
+      </div>
+    </section>
+    <div class="card" style="margin-top:0;">
+      <div class="btn-group">
+        <button class="btn" id="genSeedlingBtn">生成苗木表</button>
+        <button class="btn btn-accent" id="exportExcelBtn">导出苗木表Excel</button>
+        <button class="btn btn-secondary" id="quickUpBottomBtn">快速上看</button>
+        <button class="btn btn-secondary" id="logoutBtn">注销登录</button>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div>© Twolobster ｜ Flower Border Design & Management System | Data updated: May 2026 | v4.1 Security Edition</div>
+    <div style="margin-top: 20px;">
+      <img src="https://visitor-badge.laobi.icu/badge?page_id=twolobster_fbdms" alt="visitor badge" />
+    </div>
+  </footer>
+</div>
+
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+  <div class="image-modal-content" onclick="event.stopPropagation()">
+    <img id="modalImage" src="" alt="植物图片">
+    <p id="modalPlantName"></p>
+  </div>
+</div>
+
+<script>
+// ======================= 用户数据库 =======================
+const DEFAULT_USERS = [
+  { username: "T001", password: "T001", role: "advanced" },
+  { username: "T002", password: "T002", role: "advanced" },
+  { username: "T003", password: "T003", role: "advanced" },
+  { username: "P001", password: "P001", role: "normal" },
+  { username: "P002", password: "P002", role: "normal" },
+  { username: "P003", password: "P003", role: "normal" },
+  { username: "twolobster", password: "2026", role: "admin" }
+];
+let users = [...DEFAULT_USERS];
+
+let failCount = 0;
+let lockUntil = 0;
+let countdownInterval = null;
+let currentUser = null;
+
+// ======================= 植物数据库 (完整 98 种) =======================
+const FLOWER_DB = [
+{"id":"f1","name":"大花金鸡菊","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-50cm","lifespan":"多年生","color":["黄"],"bloom":"5-9","crown":"30-40cm","thumb":"images/花境设计/f1 大花金鸡菊.jpg"},
+{"id":"f2","name":"高山紫菀","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-150cm","lifespan":"多年生","color":["紫","粉","蓝"],"bloom":"9-10","crown":"40-50cm","thumb":"images/花境设计/f2 高山紫菀.jpg"},
+{"id":"f3","name":"大滨菊","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-110cm","lifespan":"多年生","color":["白"],"bloom":"5-6","crown":"30-40cm","thumb":"images/花境设计/f3 大滨菊.jpg"},
+{"id":"f4","name":"赛菊芋","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"60-80cm","lifespan":"多年生","color":["黄"],"bloom":"6-9","crown":"30-40cm","thumb":"images/花境设计/f4 赛菊芋.jpg"},
+{"id":"f5","name":"桔梗","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-60cm","lifespan":"多年生","color":["蓝紫"],"bloom":"6-9","crown":"20-30cm","thumb":"images/花境设计/f5 桔梗.jpg"},
+{"id":"f6","name":"柳叶马鞭草","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"90-150cm","lifespan":"一年生","color":["紫"],"bloom":"5-9","crown":"20-25cm","thumb":"images/花境设计/f6 柳叶马鞭草.jpg"},
+{"id":"f7","name":"紫松果菊","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"60-90cm","lifespan":"多年生","color":["粉"],"bloom":"6-9","crown":"40-50cm","thumb":"images/花境设计/f7 紫松果菊.jpg"},
+{"id":"f8","name":"甘野菊","habitat":"林缘","role":"卫星锚点-配角伴生植物","height":"60-90cm","lifespan":"多年生","color":["黄"],"bloom":"10-11","crown":"50-80cm","thumb":"images/花境设计/f8 甘野菊.jpg"},
+{"id":"f9","name":"‘蓝山’林荫鼠尾草","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"35-40cm","lifespan":"多年生","color":["蓝紫"],"bloom":"5-7，9-10","crown":"40-50cm","thumb":"images/花境设计/f9 蓝山林荫鼠尾草.jpg"},
+{"id":"f10","name":"德国鸢尾","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["紫","黄"],"bloom":"5-6","crown":"30-40cm","thumb":"images/花境设计/f10 德国鸢尾.jpg"},
+{"id":"f11","name":"‘皇冠'蓍草","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"60-80cm","lifespan":"多年生","color":["黄"],"bloom":"6-8","crown":"20-30cm","thumb":"images/花境设计/f11 皇冠蓍草.jpg"},
+{"id":"f12","name":"白花山桃草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"60-100cm","lifespan":"多年生","color":["白"],"bloom":"5-10","crown":"60-80cm","thumb":"images/花境设计/f12 白花山桃草.jpg"},
+{"id":"f13","name":"‘蓝色忧伤’荆芥","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"45-60cm","lifespan":"多年生","color":["蓝紫"],"bloom":"5-7，10","crown":"60-90cm","thumb":"images/花境设计/f13 蓝色忧伤荆芥.jpg"},
+{"id":"f14","name":"‘紫雾’荆芥","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"10-20cm","lifespan":"多年生","color":["蓝紫"],"bloom":"5-6，10","crown":"75cm","thumb":"images/花境设计/f14 紫雾荆芥.jpg"},
+{"id":"f15","name":"‘达尔文之蓝’婆婆纳","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"25-30cm","lifespan":"多年生","color":["紫"],"bloom":"5-7","crown":"20-25cm","thumb":"images/花境设计/f15 达尔文之蓝婆婆纳.jpg"},
+{"id":"f16","name":"绵毛水苏","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"20-30cm","lifespan":"多年生","color":["紫"],"bloom":"5-7","crown":"30-40cm","thumb":"images/花境设计/f16 绵毛水苏.jpg"},
+{"id":"f17","name":"*百里香","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"15-20cm","lifespan":"多年生","color":["粉"],"bloom":"6-7","crown":"20-30cm","thumb":"images/花境设计/f17 百里香.jpg"},
+{"id":"f18","name":"柳叶白菀","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"130-150cm","lifespan":"多年生","color":["白"],"bloom":"10-11","crown":"50-60cm","thumb":"images/花境设计/f18 柳叶白菀.jpg"},
+{"id":"f19","name":"‘蓝碟’鸽子蓝盆花","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"20-25cm","lifespan":"多年生","color":["蓝"],"bloom":"5-11","crown":"20-30cm","thumb":"images/花境设计/f19 蓝盆花.jpg"},
+{"id":"f20","name":"山韭","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"20-35cm","lifespan":"多年生","color":["粉"],"bloom":"6-7","crown":"15-20cm","thumb":"images/花境设计/f20 山韭.jpg"},
+{"id":"f21","name":"*地榆","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["紫红"],"bloom":"6-10","crown":"40-45cm","thumb":"images/花境设计/f21 地榆.jpg"},
+{"id":"f22","name":"千叶蓍","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["粉","红","黄","白"],"bloom":"6-7","crown":"30-40cm","thumb":"images/花境设计/f22 千叶蓍.jpg"},
+{"id":"f23","name":"中华景天","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"10-15cm","lifespan":"多年生","color":["绿"],"bloom":"4-11","crown":"15-20cm","thumb":"images/花境设计/f23 中华景天.jpg"},
+{"id":"f24","name":"八宝景天","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-50cm","lifespan":"多年生","color":["粉"],"bloom":"7-9","crown":"20-35cm","thumb":"images/花境设计/f24 八宝景天.jpg"},
+{"id":"f25","name":"藁本","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-50cm","lifespan":"多年生","color":["白"],"bloom":"8-9","crown":"20-30cm","thumb":"images/花境设计/f25 藁本.jpg"},
+{"id":"f26","name":"蓝羊茅","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"30-35cm","lifespan":"多年生","color":["蓝"],"bloom":"5-11","crown":"20-30cm","thumb":"images/花境设计/f26 蓝羊茅.jpg"},
+{"id":"f27","name":"‘卡尔’拂子茅","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"90-100cm","lifespan":"多年生","color":["黄"],"bloom":"6-10","crown":"40-50cm","thumb":"images/花境设计/f27 卡尔拂子茅.jpg"},
+{"id":"f28","name":"‘小兔子’狼尾草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"50-60cm","lifespan":"多年生","color":["黄"],"bloom":"8-10","crown":"40-50cm","thumb":"images/花境设计/f28 小兔子狼尾草.jpg"},
+{"id":"f29","name":"荚果蕨","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"40-50cm","lifespan":"多年生","color":["绿"],"bloom":"5-10","crown":"20-30cm","thumb":"images/花境设计/f29 荚果蕨.jpg"},
+{"id":"f30","name":"紫露草","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"25-35cm","lifespan":"多年生","color":["紫"],"bloom":"6-9","crown":"30-50cm","thumb":"images/花境设计/f30 紫露草.jpg"},
+{"id":"f31","name":"蛇鞭菊","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"50-80cm","lifespan":"多年生","color":["紫"],"bloom":"7-8","crown":"30-40cm","thumb":"images/花境设计/f31 蛇鞭菊.jpg"},
+{"id":"f32","name":"大麻叶泽兰","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"80-90cm","lifespan":"多年生","color":["粉"],"bloom":"7-10","crown":"40-50cm","thumb":"images/花境设计/f32 大麻叶泽兰.jpg"},
+{"id":"f33","name":"连钱草","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"10-20cm","lifespan":"多年生","color":["淡紫"],"bloom":"3-5","crown":"20-30cm","thumb":"images/花境设计/f33 连钱草.jpg"},
+{"id":"f34","name":"假龙头","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"50-60cm","lifespan":"多年生","color":["粉"],"bloom":"6-9","crown":"25-35cm","thumb":"images/花境设计/f34 假龙头.jpg"},
+{"id":"f35","name":"华北香薷","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"50-60cm","lifespan":"多年生","color":["紫"],"bloom":"9-10","crown":"50-60cm","thumb":"images/花境设计/f35 华北香薷.jpg"},
+{"id":"f36","name":"美丽月见草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-50cm","lifespan":"多年生","color":["粉"],"bloom":"5-8","crown":"20-30cm","thumb":"images/花境设计/f36 美丽月见草.jpg"},
+{"id":"f37","name":"射干","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"50-70cm","lifespan":"多年生","color":["橙"],"bloom":"6-8","crown":"15-20cm","thumb":"images/花境设计/f37 射干.jpg"},
+{"id":"f38","name":"*马利筋","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"80-100cm","lifespan":"一年生","color":["橙","黄"],"bloom":"3-11","crown":"30-40cm","thumb":"images/花境设计/f38 马利筋.jpg"},
+{"id":"f39","name":"*醉鱼草","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"100-300cm","lifespan":"多年生","color":["紫","白","粉"],"bloom":"4-10","crown":"40-60cm","thumb":"images/花境设计/f39 醉鱼草.jpg"},
+{"id":"f40","name":"*毛茛","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-70cm","lifespan":"多年生","color":["黄"],"bloom":"4-8","crown":"20-30cm","thumb":"images/花境设计/f40 毛茛.jpg"},
+{"id":"f41","name":"蓝雪花","habitat":"林缘","role":"卫星锚点-配角伴生植物","height":"20-30cm","lifespan":"多年生","color":["蓝"],"bloom":"7-9","crown":"20-30cm","thumb":"images/花境设计/f41 蓝雪花.jpg"},
+{"id":"f42","name":"*龙牙草","habitat":["林缘","林地"],"role":"卫星锚点-配角伴生植物","height":"40-60cm","lifespan":"多年生","color":["黄"],"bloom":"5-12","crown":"30-40cm","thumb":"images/花境设计/f42 龙牙草.jpg"},
+{"id":"f43","name":"夏枯草","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"20-30cm","lifespan":"多年生","color":["紫"],"bloom":"4-6","crown":"20-30cm","thumb":"images/花境设计/f43 夏枯草.jpg"},
+{"id":"f44","name":"玉簪","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"30-80cm","lifespan":"多年生","color":["白"],"bloom":"7-9","crown":"30-40cm","thumb":"images/花境设计/f44 玉簪.jpg"},
+{"id":"f45","name":"朝雾草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"20-25cm","lifespan":"多年生","color":["白"],"bloom":"7-8","crown":"15-20cm","thumb":"images/花境设计/f45 朝雾草.jpg"},
+{"id":"f46","name":"*耧斗菜","habitat":"林缘","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["紫"],"bloom":"5-7","crown":"35-45cm","thumb":"images/花境设计/f46 耧斗菜.jpg"},
+{"id":"f47","name":"*蓝雾草（裂叶锥托泽兰）","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-50cm","lifespan":"多年生","color":["蓝紫"],"bloom":"5-8","crown":"20-30cm","thumb":"images/花境设计/f47 蓝雾草（裂叶锥托泽兰）.jpg"},
+{"id":"f48","name":"大花葱（巨韭）","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"25-35cm","lifespan":"多年生","color":["紫","紫红","白"],"bloom":"5-6","crown":"30-45cm","thumb":"images/花境设计/f48 大花葱（巨韭）.jpg"},
+{"id":"f49","name":"落新妇","habitat":["林缘","林地"],"role":"结构锚点-空间定位植物","height":"50-100cm","lifespan":"多年生","color":["紫","紫红"],"bloom":"7-8","crown":"20-30cm","thumb":"images/花境设计/f49 落新妇.jpg"},
+{"id":"f50","name":"马蔺","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-60cm","lifespan":"多年生","color":["蓝"],"bloom":"4-5","crown":"20-30cm","thumb":"images/花境设计/f50 马蔺.jpg"},
+{"id":"f51","name":"大叶铁线莲","habitat":["林缘","林地"],"role":"结构锚点-空间定位植物","height":"40-80cm","lifespan":"多年生","color":["蓝"],"bloom":"7-9","crown":"30-40cm","thumb":"images/花境设计/f51 大叶铁线莲.jpg"},
+{"id":"f52","name":"丽色画眉草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"50-60cm","lifespan":"多年生","color":["紫"],"bloom":"5-11","crown":"40-50cm","thumb":"images/花境设计/f52 丽色画眉草.jpg"},
+{"id":"f53","name":"披针叶苔草","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"20-30cm","lifespan":"多年生","color":["绿"],"bloom":"3-4","crown":"20-30cm","thumb":"images/花境设计/f53 披针叶苔草.jpg"},
+{"id":"f54","name":"涝峪苔草","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"25-35cm","lifespan":"多年生","color":["绿"],"bloom":"3-4","crown":"20-30cm","thumb":"images/花境设计/f54 涝峪苔草.jpg"},
+{"id":"f55","name":"芸香","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"60-80cm","lifespan":"多年生","color":["黄"],"bloom":"3-6","crown":"30-40cm","thumb":"images/花境设计/f55 芸香.jpg"},
+{"id":"f56","name":"宿根亚麻","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-50cm","lifespan":"多年生","color":["蓝"],"bloom":"6-7","crown":"25-30cm","thumb":"images/花境设计/f56 宿根亚麻.jpg"},
+{"id":"f57","name":"绢毛匍匐委陵菜","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"5-20cm","lifespan":"多年生","color":["黄"],"bloom":"4-6","crown":"10-20cm","thumb":"images/花境设计/f57 绢毛匍匐委陵菜.jpg"},
+{"id":"f58","name":"垂盆草","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"5-20cm","lifespan":"多年生","color":["黄"],"bloom":"5-6","crown":"10-20cm","thumb":"images/花境设计/f58 垂盆草.jpg"},
+{"id":"f59","name":"青绿苔草","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"15-30cm","lifespan":"多年生","color":["绿"],"bloom":"4-5","crown":"20-30cm","thumb":"images/花境设计/f59 青绿苔草.jpg"},
+{"id":"f60","name":"紫菀","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-50cm","lifespan":"多年生","color":["紫"],"bloom":"9-10","crown":"30-45cm","thumb":"images/花境设计/f60 紫菀.jpg"},
+{"id":"f61","name":"裂叶金光菊","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"150-200cm","lifespan":"多年生","color":["黄"],"bloom":"6-8","crown":"30-40cm","thumb":"images/花境设计/f61 裂叶金光菊.jpg"},
+{"id":"f62","name":"冬凌草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-130cm","lifespan":"多年生","color":["蓝"],"bloom":"8-10","crown":"40-50cm","thumb":"images/花境设计/f62 冬凌草.jpg"},
+{"id":"f63","name":"水杨梅","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"20-25cm","lifespan":"多年生","color":["黄"],"bloom":"4-6","crown":"30-35cm","thumb":"images/花境设计/f63 水杨梅.jpg"},
+{"id":"f64","name":"紫花地丁","habitat":["开阔绿地","林缘","林地"],"role":"基质锚点-群演填充植物","height":"10-15cm","lifespan":"多年生","color":["紫"],"bloom":"4-5","crown":"10-20cm","thumb":"images/花境设计/f64 紫花地丁.jpg"},
+{"id":"f65","name":"蒲棒菊","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-50cm","lifespan":"多年生","color":["黄"],"bloom":"6-8","crown":"45-55cm","thumb":"images/花境设计/f65 蒲棒菊.jpg"},
+{"id":"f66","name":"蓝刺头","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["蓝","蓝紫"],"bloom":"6-8","crown":"30-40cm","thumb":"images/花境设计/f66 蓝刺头.jpg"},
+{"id":"f67","name":"硫磺菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"30-40cm","lifespan":"一年生","color":["橙","黄","红"],"bloom":"6-10","crown":"30-40cm","thumb":"images/花境设计/f67 硫磺菊.jpg"},
+{"id":"f68","name":"刺芹","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["紫"],"bloom":"5-9","crown":"30-35cm","thumb":"images/花境设计/f68 刺芹.jpg"},
+{"id":"f69","name":"美国薄荷","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"70-75cm","lifespan":"多年生","color":["红","紫"],"bloom":"7-8","crown":"30-40cm","thumb":"images/花境设计/f69 美国薄荷.jpg"},
+{"id":"f70","name":"火尾抱茎蓼","habitat":"林缘","role":"结构锚点-空间定位植物","height":"70-80cm","lifespan":"多年生","color":["红"],"bloom":"6-10","crown":"70-80cm","thumb":"images/花境设计/f70 火尾抱茎蓼.jpg"},
+{"id":"f71","name":"千日红","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-60cm","lifespan":"一年生","color":["紫红"],"bloom":"6-9","crown":"30-40cm","thumb":"images/花境设计/f71 千日红.jpg"},
+{"id":"f72","name":"*虞美人","habitat":["开阔绿地","林缘"],"role":"自由浮动-特约散点植物","height":"25-90cm","lifespan":"一年生","color":["橙","黄","紫","白","红"],"bloom":"5-7","crown":"30-40cm","thumb":"images/花境设计/f72 虞美人.jpg"},
+{"id":"f73","name":"千屈菜","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"30-100cm","lifespan":"多年生","color":["紫"],"bloom":"7-8","crown":"30-40cm","thumb":"images/花境设计/f73 千屈菜.jpg"},
+{"id":"f74","name":"美国石竹（须苞石竹）","habitat":"林缘","role":"基质锚点-群演填充植物","height":"30-60cm","lifespan":"多年生","color":["粉","紫"],"bloom":"5-10","crown":"20-30cm","thumb":"images/花境设计/f74 美国石竹（须苞石竹）.jpg"},
+{"id":"f75","name":"蒲公英","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"10-15cm","lifespan":"多年生","color":["黄"],"bloom":"4-9","crown":"20-30cm","thumb":"images/花境设计/f75 蒲公英.jpg"},
+{"id":"f76","name":"宿根天人菊","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"35-40cm","lifespan":"多年生","color":["橙"],"bloom":"6-10","crown":"30-40cm","thumb":"images/花境设计/f76 宿根天人菊.jpg"},
+{"id":"f77","name":"红花钓钟柳","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-60cm","lifespan":"多年生","color":["红"],"bloom":"5-6","crown":"20-30cm","thumb":"images/花境设计/f77 红花钓钟柳.jpg"},
+{"id":"f78","name":"*一枝黄花","habitat":["林缘","林地"],"role":"结构锚点-空间定位植物","height":"90-120cm","lifespan":"多年生","color":["黄"],"bloom":"7-8","crown":"50-60cm","thumb":"images/花境设计/f78 一枝黄花.jpg"},
+{"id":"f79","name":"火炬花","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"80-100cm","lifespan":"多年生","color":["橙"],"bloom":"6-10","crown":"40-45cm","thumb":"images/花境设计/f79 火炬花.jpg"},
+{"id":"f80","name":"堆心菊","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"80-100cm","lifespan":"多年生","color":["黄"],"bloom":"7-9","crown":"40-60cm","thumb":"images/花境设计/f80 堆心菊.jpg"},
+{"id":"f81","name":"紫斑风铃草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["粉","紫"],"bloom":"6-8","crown":"30-40cm","thumb":"images/花境设计/f81 紫斑风铃草.jpg"},
+{"id":"f82","name":"藿香","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"60-80cm","lifespan":"多年生","color":["蓝紫"],"bloom":"6-9","crown":"50-60cm","thumb":"images/花境设计/f82 藿香.jpg"},
+{"id":"f83","name":"玉带草","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"50-60cm","lifespan":"多年生","color":["紫"],"bloom":"6-7","crown":"30-40cm","thumb":"images/花境设计/f83 玉带草.jpg"},
+{"id":"f84","name":"*唐松草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"50-80cm","lifespan":"多年生","color":["白"],"bloom":"6-7","crown":"30-40cm","thumb":"images/花境设计/f84 唐松草.jpg"},
+{"id":"f85","name":"芒颖大麦草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["粉"],"bloom":"5-7","crown":"25-35cm","thumb":"images/花境设计/f85 芒颖大麦草.jpg"},
+{"id":"f86","name":"重金属柳枝稷","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"90-100cm","lifespan":"多年生","color":["绿"],"bloom":"6-10","crown":"50-60cm","thumb":"images/花境设计/f86 重金属柳枝稷.jpg"},
+{"id":"f87","name":"黄花败酱","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"50-130cm","lifespan":"多年生","color":["黄"],"bloom":"7-8","crown":"30-40cm","thumb":"images/花境设计/f87 黄花败酱.jpg"},
+{"id":"f88","name":"荷包牡丹","habitat":"林缘","role":"卫星锚点-配角伴生植物","height":"25-35cm","lifespan":"多年生","color":["粉","紫"],"bloom":"4-6","crown":"30-40cm","thumb":"images/花境设计/f88 荷包牡丹.jpg"},
+{"id":"f89","name":"斑叶芒","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"100-150cm","lifespan":"多年生","color":["黄"],"bloom":"5-11","crown":"60-80cm","thumb":"images/花境设计/f89 斑叶芒.jpg"},
+{"id":"f90","name":"细叶芒","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"100-150cm","lifespan":"多年生","color":["红"],"bloom":"9-10","crown":"60-80cm","thumb":"images/花境设计/f90 细叶芒.jpg"},
+{"id":"f91","name":"毛地黄吊钟柳","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"60-100cm","lifespan":"多年生","color":["粉","白","蓝紫"],"bloom":"6-8","crown":"25-30cm","thumb":"images/花境设计/f91 毛地黄吊钟柳.jpg"},
+{"id":"f92","name":"晨光芒","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"100-200cm","lifespan":"多年生","color":["褐"],"bloom":"7-12","crown":"60-80cm","thumb":"images/花境设计/f92 晨光芒.jpg"},
+{"id":"f93","name":"芨芨草","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"50-250cm","lifespan":"多年生","color":["绿"],"bloom":"6-9","crown":"40-50cm","thumb":"images/花境设计/f93 芨芨草.jpg"},
+{"id":"f94","name":"大花萱草","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"60-90cm","lifespan":"多年生","color":["黄","橙"],"bloom":"6-7","crown":"25-30cm","thumb":"images/花境设计/f94 大花萱草.jpg"},
+{"id":"f95","name":"卵叶紫菀","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"50-60cm","lifespan":"多年生","color":["蓝紫"],"bloom":"9-10","crown":"40-50cm","thumb":"images/花境设计/f95 卵叶紫菀.jpg"},
+{"id":"f96","name":"鞑靼紫菀","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"50-60cm","lifespan":"多年生","color":["粉"],"bloom":"9-10","crown":"40-50cm","thumb":"images/花境设计/f96 鞑靼紫菀.jpg"},
+{"id":"f97","name":"波斯菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"100-200cm","lifespan":"一年生","color":["粉","白","红"],"bloom":"6-8","crown":"30-60cm","thumb":"images/花境设计/f97 波斯菊.jpg"},
+{"id":"f98","name":"柳叶星河","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"80-200cm","lifespan":"多年生","color":["白"],"bloom":"5-10","crown":"60-80cm","thumb":"images/花境设计/f98 柳叶星河.jpg"},
+{"id":"f100","name":"金盏菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-75cm","lifespan":"一年生","color":["黄","橙"],"bloom":"4-9","crown":"30-40cm","thumb":"images/花境设计/f100 金盏菊.jpg"}
+];
+
+const ROLE_OPTIONS = ['结构锚点-空间定位植物', '主题锚点-主角特色植物', '卫星锚点-配角伴生植物', '基质锚点-群演填充植物', '自由浮动-特约散点植物'];
+let selectedFlowerIds = new Set();
+let plantCustomData = new Map();
+
+function initCustomData() {
+  FLOWER_DB.forEach(f => {
+    if (!plantCustomData.has(f.id)) {
+      plantCustomData.set(f.id, { customRole: f.role, density: 25, percentage: 0 });
+    }
+  });
+}
+initCustomData();
+
+function mapColorToCss(c) { const map={紫:"#7a0099",黄:"#ffbb00",白:"#ecf0f1",蓝:"#0066ff",粉:"#ff77ff",橙:"#ff8800",蓝紫:"#5555ff",红:"#ff0000",绿:"#99dd00",紫红:"#880000",淡紫:"#ccbbff",褐:"#886600"}; return map[c]||"#bdc3c7"; }
+function parseMonths(bs) { if(!bs) return []; let m=[]; bs.split(/[,，]/).forEach(s=>{ let p=s.split("-"); if(p.length===1){let v=parseInt(p[0]); if(!isNaN(v)) m.push(v);} else if(p.length===2){let a=parseInt(p[0]),b=parseInt(p[1]); for(let i=a;i<=b;i++) m.push(i);}}); return [...new Set(m)].sort((a,b)=>a-b); }
+
+function syncTotalPercent() {
+  let total = 0;
+  for(let id of selectedFlowerIds) {
+    let d = plantCustomData.get(id);
+    if(d && d.percentage) total += parseFloat(d.percentage) || 0;
+  }
+  total = Math.round(total*10)/10;
+  const el = document.getElementById('totalPercentDisplay');
+  if(el) {
+    el.innerText = total+'%';
+    if(total<100) { el.classList.remove('red'); el.classList.add('green'); }
+    else if(total>100) { el.classList.remove('green'); el.classList.add('red'); }
+    else { el.classList.remove('green','red'); el.style.color='#2563eb'; }
+  }
+  return total;
+}
+
+function renderSelectionTable() {
+  const container = document.getElementById("flowerSelection");
+  let sel=[], unsel=[];
+  FLOWER_DB.forEach(f=>{ if(selectedFlowerIds.has(f.id)) sel.push(f); else unsel.push(f); });
+  const all = [...sel, ...unsel];
+  let html = `<div class="table-container"><table><thead><tr><th>选择</th><th>名称</th><th>生境</th><th>角色</th><th>高度</th><th>花色</th><th>花期</th><th>种植密度(株/平米)</th><th>花境占比 %</th></tr></thead><tbody>`;
+  all.forEach(f=>{
+    const custom = plantCustomData.get(f.id) || { customRole: f.role, density:25, percentage:0 };
+    const colorsHtml = Array.isArray(f.color) ? f.color.map(c=>`<span class="color-dot" style="background-color:${mapColorToCss(c)}"></span>${c}`).join(", ") : `<span class="color-dot" style="background-color:${mapColorToCss(f.color)}"></span>${f.color}`;
+    let roleOpts = ROLE_OPTIONS.map(opt=>`<option value="${opt}" ${custom.customRole===opt?'selected':''}>${opt}</option>`).join('');
+    html += `<tr data-id="${f.id}">
+      <td><input type="checkbox" class="plant-checkbox" data-id="${f.id}" ${selectedFlowerIds.has(f.id)?'checked':''}></td>
+      <td>${f.name}</td>
+      <td>${Array.isArray(f.habitat)?f.habitat.join(", "):f.habitat}</td>
+      <td><select class="role-select" data-id="${f.id}">${roleOpts}</select></td>
+      <td>${f.height}</td>
+      <td>${colorsHtml}</td>
+      <td>${f.bloom}</td>
+      <td><input type="number" class="density-input" data-id="${f.id}" value="${custom.density}" step="1" min="0" style="width:80px;"></td>
+      <td><input type="number" class="percent-input" data-id="${f.id}" value="${custom.percentage}" step="0.5" min="0" max="100" style="width:80px;"></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+  document.querySelectorAll('.plant-checkbox').forEach(cb=>cb.addEventListener('change',e=>toggleFlowerSelection(cb)));
+  document.querySelectorAll('.role-select').forEach(sel=>sel.addEventListener('change',e=>{ let d=plantCustomData.get(sel.dataset.id); if(d) d.customRole=sel.value; }));
+  document.querySelectorAll('.density-input').forEach(inp=>inp.addEventListener('change',e=>{ let d=plantCustomData.get(inp.dataset.id); if(d) d.density=parseFloat(inp.value)||25; }));
+  document.querySelectorAll('.percent-input').forEach(inp=>inp.addEventListener('input',e=>{ let d=plantCustomData.get(inp.dataset.id); if(d) d.percentage=parseFloat(inp.value)||0; syncTotalPercent(); }));
+  syncTotalPercent();
+}
+function toggleFlowerSelection(cb) { let id=cb.dataset.id; if(cb.checked) selectedFlowerIds.add(id); else selectedFlowerIds.delete(id); renderSelectionTable(); syncTotalPercent(); }
+function generateMyDesign() { if(selectedFlowerIds.size===0){alert("请至少选择一个植物");return;} const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id)); const out=document.getElementById("designOutput"); out.classList.remove("hidden"); let html=`<h3 class="section-title">花卉清单</h3><div class="table-container"><table><thead><tr><th>名称</th><th>生境</th><th>角色</th><th>高度</th><th>花色</th><th>花期</th></tr></thead><tbody>`; plants.forEach(f=>{ const cr=plantCustomData.get(f.id)?.customRole||f.role; const ch=Array.isArray(f.color)?f.color.map(c=>`<span class="color-dot" style="background-color:${mapColorToCss(c)}"></span>${c}`).join(", "):`<span class="color-dot" style="background-color:${mapColorToCss(f.color)}"></span>${f.color}`; html+=`<tr><td>${f.name}</td><td>${Array.isArray(f.habitat)?f.habitat.join(", "):f.habitat}</td><td>${cr}</td><td>${f.height}</td><td>${ch}</td><td>${f.bloom}</td></tr>`; }); html+=`</tbody></table></div>`; const roleMap={}; ROLE_OPTIONS.forEach(r=>roleMap[r]=[]); plants.forEach(f=>{ let cr=plantCustomData.get(f.id)?.customRole||f.role; if(roleMap[cr]) roleMap[cr].push(f); }); let roleHtml='<div class="role-analysis">'; ROLE_OPTIONS.forEach(r=>{ let arr=roleMap[r]||[]; roleHtml+=`<div class="analysis-card"><h4>${r.split('-')[1]}<span class="count">${arr.length}</span></h4>${arr.length>0?'<ul class="analysis-list">'+arr.map(it=>`<li>${it.name}</li>`).join('')+'</ul>':'<div class="muted">（无）</div>'}</div>`; }); roleHtml+='</div>'; const colorMap={}; plants.forEach(f=>{ let cols=Array.isArray(f.color)?f.color:[f.color]; cols.forEach(c=>{if(!colorMap[c])colorMap[c]=[]; colorMap[c].push(f.name);});}); let colorHtml='<div class="color-analysis">'; for(let c in colorMap) colorHtml+=`<div class="analysis-card"><h4><span class="color-dot" style="background-color:${mapColorToCss(c)}"></span> ${c}<span class="count">${colorMap[c].length}</span></h4><ul class="analysis-list">${colorMap[c].map(n=>`<li>${n}</li>`).join('')}</ul></div>`; colorHtml+='</div>'; out.innerHTML=html+'<h3 class="section-title">角色分析</h3>'+roleHtml+'<h3 class="section-title">颜色统计</h3>'+colorHtml; generateBloomTable(plants,"designBloom"); document.getElementById("designBloom").classList.remove("hidden"); alert("✅ 设计清单已生成！"); document.getElementById("designOutput").scrollIntoView({behavior:"smooth",block:"start"}); }
+function generateBloomTable(list, cid) { list.sort((a,b)=>parseMonths(a.bloom)[0]-parseMonths(b.bloom)[0]); let html=`<h3 class="section-title">花期花色展示图（1月 - 12月）</h3><div class="table-container"><table class="bloom-table"><thead><tr><th class="bloom-name">植物</th>`; for(let i=1;i<=12;i++) html+=`<th>${i}月</th>`; html+=`</tr></thead><tbody>`; list.forEach(f=>{ let mons=parseMonths(f.bloom); html+=`<tr><td class="bloom-name">${f.name}</td>`; for(let i=1;i<=12;i++){ let ok=mons.includes(i); let bg=ok?mapColorToCss(Array.isArray(f.color)?f.color[0]:f.color):''; html+=`<td style="background-color:${bg}; color:${ok?'white':'inherit'};">${ok?"●":""}</td>`; } html+=`</tr>`; }); html+=`</tbody></table></div>`; document.getElementById(cid).innerHTML=html; }
+function resetMyDesign() { selectedFlowerIds.clear(); initCustomData(); renderSelectionTable(); document.getElementById("designOutput").innerHTML=""; document.getElementById("designOutput").classList.add("hidden"); document.getElementById("designBloom").classList.add("hidden"); document.getElementById("seedlingSection").classList.add("hidden"); syncTotalPercent(); }
+function saveStateToFile() { const state={version:"4.1",selectedFlowerIds:Array.from(selectedFlowerIds),plantCustomData:Array.from(plantCustomData.entries())}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'})); a.download=`花境方案_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href); }
+function triggerLoadFile() { document.getElementById('loadStateFileInput').click(); }
+function loadStateFromFile(file) { const r=new FileReader(); r.onload=e=>{ try{ const s=JSON.parse(e.target.result); if(s.version && s.selectedFlowerIds){ selectedFlowerIds=new Set(s.selectedFlowerIds); if(s.plantCustomData) plantCustomData=new Map(s.plantCustomData); else initCustomData(); renderSelectionTable(); if(selectedFlowerIds.size>0) generateMyDesign(); else resetMyDesign(); alert("加载成功"); } else alert("格式错误"); }catch(err){alert("失败");} }; r.readAsText(file); }
+function generateSeedlingTable() { if(currentUser?.role==='normal'){ alert("普通用户无权限生成苗木表"); return; } const total= syncTotalPercent(); if(Math.abs(total-100)>0.01){ alert(`设计占比总和为${total}%，必须为100%才能生成苗木表！`); return; } const area=parseFloat(document.getElementById('projectArea').value)||0; if(area<=0){ alert("请填写有效的花境面积"); return; } const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id)); let rows=[]; plants.forEach(f=>{ let c=plantCustomData.get(f.id); if(c && c.percentage>0){ let p=c.percentage, a=(p/100)*area, d=c.density, q=Math.round(a*d); rows.push({id:f.id,name:f.name,role:c.customRole,density:d,percent:p,area:a,quantity:q,thumb:f.thumb}); } }); rows.sort((a,b)=>a.role.localeCompare(b.role)); let idx=1, pName=document.getElementById('projectName').value||"花境项目"; let tableHtml=`<table class="seedling-table" id="seedlingDetailTable"><thead><tr><th>序号</th><th>品种</th><th>角色</th><th>数量（株）</th><th>面积（平米）</th><th>种植密度（株/平米）</th><th>占比 %</th></tr></thead><tbody>`; rows.forEach(r=>{ tableHtml+=`<tr><td>${idx++}</td><td class="clickable-plant" data-name="${r.name}" data-img="${r.thumb||''}">${r.name}</td><td>${r.role}</td><td>${r.quantity}</td><td>${r.area.toFixed(1)}</td><td>${r.density}</td><td>${r.percent}</td></tr>`; }); tableHtml+=`</tbody></table>`; document.getElementById('seedlingTableContainer').innerHTML=`<h3>${pName} · 苗木表</h3>`+tableHtml; document.getElementById('seedlingSection').classList.remove("hidden"); document.querySelectorAll('.clickable-plant').forEach(el=>{ el.addEventListener('click',(e)=>{ e.stopPropagation(); let img=el.getAttribute('data-img'), name=el.getAttribute('data-name'); if(img){ document.getElementById('modalImage').src=img; document.getElementById('modalPlantName').innerText=name; document.getElementById('imageModal').style.display='flex'; }else alert('暂无图片'); }); }); }
+function exportExcel() { if(currentUser?.role==='normal'){ alert("普通用户无权限导出Excel"); return; } const tbl=document.querySelector('#seedlingDetailTable'); if(!tbl){ alert("请先生成苗木表"); return; } const wb=XLSX.utils.book_new(); const ws=XLSX.utils.table_to_sheet(tbl,{raw:true}); ws['!cols']=[{wch:6},{wch:18},{wch:22},{wch:12},{wch:12},{wch:16},{wch:10}]; XLSX.utils.book_append_sheet(wb,ws,"苗木表"); XLSX.writeFile(wb,`${document.getElementById('projectName').value||"花境"}_苗木表.xlsx`); }
+function closeImageModal() { document.getElementById('imageModal').style.display='none'; }
+
+// ======================= 登录逻辑与权限控制 =======================
+function disableMainContent(disabled) {
+  const main = document.getElementById('mainContent');
+  if(disabled) { main.classList.add('disabled'); document.body.classList.add('modal-open'); }
+  else { main.classList.remove('disabled'); document.body.classList.remove('modal-open'); }
+}
+function saveLoginState(remember, user) {
+  const data = { username: user.username, role: user.role, timestamp: Date.now() };
+  if(remember) {
+    let expiryDays = (user.role === 'admin') ? 30 : 7;
+    data.expiry = Date.now() + expiryDays * 24 * 3600 * 1000;
+    localStorage.setItem('fbdms_login', JSON.stringify(data));
+  } else {
+    sessionStorage.setItem('fbdms_login', JSON.stringify(data));
+  }
+}
+function clearLoginState() { localStorage.removeItem('fbdms_login'); sessionStorage.removeItem('fbdms_login'); }
+function tryAutoLogin() {
+  let stored = localStorage.getItem('fbdms_login');
+  let isSession = false;
+  if(!stored) { stored = sessionStorage.getItem('fbdms_login'); if(stored) isSession=true; }
+  if(stored) {
+    try {
+      const data = JSON.parse(stored);
+      if(data.expiry && Date.now() > data.expiry) { clearLoginState(); return false; }
+      const user = users.find(u=>u.username===data.username);
+      if(user) { currentUser = { username: user.username, role: user.role }; return true; }
+    } catch(e) {}
+  }
+  return false;
+}
+function onLoginSuccess(user, remember) {
+  currentUser = { username: user.username, role: user.role };
+  saveLoginState(remember, currentUser);
+  document.getElementById('loginOverlay').style.display = 'none';
+  disableMainContent(false);
+  applyRoleBasedUI();
+  renderSelectionTable();
+}
+function applyRoleBasedUI() {
+  const genBtn = document.getElementById('genSeedlingBtn');
+  const expBtn = document.getElementById('exportExcelBtn');
+  if(currentUser?.role === 'normal') {
+    genBtn.disabled = true; expBtn.disabled = true;
+    genBtn.title = "普通用户无权限"; expBtn.title = "普通用户无权限";
+  } else {
+    genBtn.disabled = false; expBtn.disabled = false;
+    genBtn.title = ""; expBtn.title = "";
+  }
+}
+function attemptLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errorDiv = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  if(lockUntil > Date.now()) {
+    const remain = Math.ceil((lockUntil - Date.now())/1000);
+    errorDiv.innerHTML = `尝试次数过多，请等待 ${remain} 秒`;
+    return;
+  }
+  const user = users.find(u=>u.username===username && u.password===password);
+  if(user) {
+    failCount = 0; errorDiv.innerHTML = '';
+    const remember = document.getElementById('rememberCheckbox').checked;
+    onLoginSuccess(user, remember);
+  } else {
+    failCount++;
+    if(failCount >= 5) {
+      lockUntil = Date.now() + 30000;
+      errorDiv.innerHTML = `密码错误次数过多，请等待30秒`;
+      loginBtn.disabled = true;
+      let remaining = 30;
+      if(countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(()=>{
+        remaining--;
+        if(remaining<=0) { clearInterval(countdownInterval); loginBtn.disabled=false; errorDiv.innerHTML=''; }
+        else errorDiv.innerHTML = `失败次数过多，请等待 ${remaining} 秒`;
+      },1000);
+    } else {
+      errorDiv.innerHTML = `用户名或密码错误，剩余尝试次数: ${5-failCount}`;
+    }
+  }
+}
+function logoutWithConfirm() {
+  if(confirm("确定要注销登录吗？您将需要重新登录才能使用系统。")) {
+    clearLoginState();
+    currentUser = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    disableMainContent(true);
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').innerHTML = '';
+    failCount = 0; lockUntil = 0;
+    if(countdownInterval) clearInterval(countdownInterval);
+    document.getElementById('loginBtn').disabled = false;
+    resetMyDesign();
+  }
+}
+
+// 绑定事件
+document.addEventListener("DOMContentLoaded", () => {
+  if(tryAutoLogin()) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    disableMainContent(false);
+    applyRoleBasedUI();
+    renderSelectionTable();
+  } else {
+    disableMainContent(true);
+  }
+  document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+  document.getElementById('logoutBtn').addEventListener('click', logoutWithConfirm);
+  document.getElementById('genListBtn').addEventListener('click', generateMyDesign);
+  document.getElementById('resetBtn').addEventListener('click', resetMyDesign);
+  document.getElementById('saveSchemeBtn').addEventListener('click', saveStateToFile);
+  document.getElementById('loadSchemeBtn').addEventListener('click', triggerLoadFile);
+  document.getElementById('exportPdfBtn').addEventListener('click', ()=>{ const el=document.getElementById("pdfContent"); if(!el||el.innerText.trim()==="") alert("请先生成设计清单"); else html2pdf().set({margin:10,filename:'花境设计方案.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save(); });
+  document.getElementById('quickDownBtn').addEventListener('click', ()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
+  document.getElementById('quickUpBottomBtn').addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  document.getElementById('genSeedlingBtn').addEventListener('click', generateSeedlingTable);
+  document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+  const fileInput = document.getElementById('loadStateFileInput');
+  fileInput.addEventListener('change', (e) => { if(e.target.files.length) loadStateFromFile(e.target.files[0]); fileInput.value=''; });
+  document.getElementById('projectArea').addEventListener('input', ()=>syncTotalPercent());
+});
+</script>
+</body>
+</html>
