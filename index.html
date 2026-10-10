@@ -496,7 +496,7 @@ footer{
     </div>
   </div>
   <footer>
-    <div>© Twolobster ｜ Flower Border Design & Management System | Data updated: Aug 2026 | v5.0 Preset</div>
+    <div>© Twolobster ｜ Flower Border Design & Management System | Data updated: Oct 2026 | v6.0 </div>
     <div style="margin-top: 20px;">
       <img src="https://visitor-badge.laobi.icu/badge?page_id=twolobster_fbdms" alt="visitor badge" />
     </div>
@@ -529,7 +529,7 @@ let lockUntil = 0;
 let countdownInterval = null;
 let currentUser = null;
 
-// ======================= 植物数据库 (完整 99 种) =======================
+// ======================= 植物数据库 (完整 158 种) =======================
 const FLOWER_DB = [
 {"id":"f1","name":"大花金鸡菊","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-50cm","lifespan":"多年生","color":["黄"],"bloom":"5-9","crown":"30-40cm","thumb":"images/花境设计/f1 大花金鸡菊.jpg"},
 {"id":"f2","name":"高山紫菀","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-150cm","lifespan":"多年生","color":["紫","粉","蓝"],"bloom":"9-10","crown":"40-50cm","thumb":"images/花境设计/f2 高山紫菀.jpg"},
@@ -629,7 +629,66 @@ const FLOWER_DB = [
 {"id":"f96","name":"鞑靼紫菀","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"50-60cm","lifespan":"多年生","color":["粉"],"bloom":"9-10","crown":"40-50cm","thumb":"images/花境设计/f96 鞑靼紫菀.jpg"},
 {"id":"f97","name":"波斯菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"80-150cm","lifespan":"一年生","color":["粉","白","红"],"bloom":"6-8","crown":"30-60cm","thumb":"images/花境设计/f97 波斯菊.jpg"},
 {"id":"f98","name":"柳叶星河","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-120cm","lifespan":"多年生","color":["白"],"bloom":"5-10","crown":"30-50cm","thumb":"images/花境设计/f98 柳叶星河.jpg"},
-{"id":"f100","name":"金盏菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-75cm","lifespan":"一年生","color":["黄","橙"],"bloom":"4-9","crown":"30-40cm","thumb":"images/花境设计/f100 金盏菊.jpg"}
+{"id":"f99","name":"薰衣草","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"35-45cm","lifespan":"一年生","color":["紫"],"bloom":"5-10","crown":"35-45cm","thumb":"images/花境设计/f99 薰衣草.jpg"},
+{"id":"f100","name":"金盏菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-75cm","lifespan":"一年生","color":["黄","橙"],"bloom":"4-9","crown":"30-40cm","thumb":"images/花境设计/f100 金盏菊.jpg"},
+{"id":"f101","name":"芍药","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"50-80cm","lifespan":"多年生","color":["粉","白","红","紫"],"bloom":"5-6","crown":"40-50cm","thumb":"images/花境设计/f101 芍药.jpg"},
+{"id":"f102","name":"牡丹","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"80-150cm","lifespan":"多年生","color":["粉","白","黄","红","紫"],"bloom":"4-5","crown":"60-120cm","thumb":"images/花境设计/f102 牡丹.jpg"},
+{"id":"f103","name":"粉花绣线菊","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"50-60cm","lifespan":"多年生","color":["粉"],"bloom":"5-7","crown":"40-50cm","thumb":"images/花境设计/f103 粉花绣线菊.jpg"},
+{"id":"f104","name":"矾根","habitat":["开阔绿地","林缘","林地"],"role":"主题锚点-主角特色植物","height":"20-35cm","lifespan":"多年生","color":["紫","白","粉","黄"],"bloom":"5-10","crown":"30-40cm","thumb":"images/花境设计/f104 矾根.jpg"},
+{"id":"f105","name":"北葱","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"20-25cm","lifespan":"多年生","color":["粉","紫"],"bloom":"6-7","crown":"20-30cm","thumb":"images/花境设计/f105 北葱.jpg"},
+{"id":"f106","name":"贯叶金丝桃","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"30-80cm","lifespan":"多年生","color":["黄"],"bloom":"7-8","crown":"30-60cm","thumb":"images/花境设计/f106 贯叶金丝桃.jpg"},
+{"id":"f107","name":"剪秋萝","habitat":["开阔绿地","林缘"],"role":"主题锚点-主角特色植物","height":"30-60cm","lifespan":"多年生","color":["红"],"bloom":"6-8","crown":"25-35cm","thumb":"images/花境设计/f107 剪秋萝.jpg"},
+{"id":"f108","name":"毛地黄","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"45-60cm","lifespan":"一年生","color":["粉","红","黄"],"bloom":"5-9","crown":"30-40cm","thumb":"images/花境设计/f108 毛地黄.jpg"},
+{"id":"f109","name":"无尽夏绣球花","habitat":"林缘","role":"主题锚点-主角特色植物","height":"50-80cm","lifespan":"多年生","color":["粉","蓝"],"bloom":"6-9","crown":"40-60cm","thumb":"images/花境设计/f109 无尽夏绣球花.jpg"},
+{"id":"f110","name":"皱叶剪秋萝","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-80cm","lifespan":"多年生","color":["红"],"bloom":"5-8","crown":"30-40cm","thumb":"images/花境设计/f110 皱叶剪秋萝.jpg"},
+{"id":"f111","name":"星云八宝景天","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-60cm","lifespan":"多年生","color":["粉","白"],"bloom":"8-9","crown":"40-50cm","thumb":"images/花境设计/f111 星云八宝景天.jpg"},
+{"id":"f112","name":"秋之喜悦八宝景天","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"40-60cm","lifespan":"多年生","color":["粉"],"bloom":"8-9","crown":"40-50cm","thumb":"images/花境设计/f112 秋之喜悦八宝景天.jpg"},
+{"id":"f113","name":"金叶莸","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"50-60cm","lifespan":"多年生","color":["蓝紫"],"bloom":"7-9","crown":"40-60cm","thumb":"images/花境设计/f113 金叶莸.jpg"},
+{"id":"f114","name":"千禧葱","habitat":"开阔绿地","role":"主题锚点-主角特色植物","height":"20-25cm","lifespan":"多年生","color":["粉","紫"],"bloom":"6-7","crown":"20-30cm","thumb":"images/花境设计/f114 千禧葱.jpg"},
+{"id":"f115","name":"瞿麦","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"50-60cm","lifespan":"多年生","color":["粉"],"bloom":"6-9","crown":"20-25cm","thumb":"images/花境设计/f115 瞿麦.jpg"},
+{"id":"f116","name":"早开堇菜","habitat":["开阔绿地","林缘","林地"],"role":"自由浮动-特约散点植物","height":"10-20cm","lifespan":"多年生","color":["紫"],"bloom":"4-5","crown":"10-20cm","thumb":"images/花境设计/f116 早开堇菜.jpg"},
+{"id":"f117","name":"旋覆花","habitat":["开阔绿地","林缘"],"role":"自由浮动-特约散点植物","height":"30-70cm","lifespan":"多年生","color":["黄"],"bloom":"6-10","crown":"30-40cm","thumb":"images/花境设计/f117 旋覆花.jpg"},
+{"id":"f118","name":"地黄","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"15-30cm","lifespan":"多年生","color":["紫红"],"bloom":"4-7","crown":"10-20cm","thumb":"images/花境设计/f118 地黄.jpg"},
+{"id":"f119","name":"*蛇莓","habitat":["开阔绿地","林缘","林地"],"role":"自由浮动-特约散点植物","height":"10-20cm","lifespan":"多年生","color":["黄"],"bloom":"6-8","crown":"10-20cm","thumb":"images/花境设计/f119 蛇莓.jpg"},
+{"id":"f120","name":"抱茎苦麦菜","habitat":["开阔绿地","林缘","林地"],"role":"自由浮动-特约散点植物","height":"30-40cm","lifespan":"多年生","color":["黄"],"bloom":"3-5","crown":"20-30cm","thumb":"images/花境设计/f120 抱茎苦麦菜.jpg"},
+{"id":"f121","name":"金莲花","habitat":["开阔绿地","林缘"],"role":"自由浮动-特约散点植物","height":"30-80cm","lifespan":"多年生","color":["黄"],"bloom":"4-5","crown":"30-40cm","thumb":"images/花境设计/f121 金莲花.jpg"},
+{"id":"f122","name":"白晶菊","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"15-30cm","lifespan":"一年生","color":["白"],"bloom":"4-6","crown":"20-30cm","thumb":"images/花境设计/f122 白晶菊.jpg"},
+{"id":"f123","name":"太阳花","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"10-20cm","lifespan":"一年生","color":["粉","白","红","紫","黄"],"bloom":"6-9","crown":"20-30cm","thumb":"images/花境设计/f123 太阳花.jpg"},
+{"id":"f124","name":"藿香蓟","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-30cm","lifespan":"一年生","color":["蓝","蓝紫"],"bloom":"6-10","crown":"20-30cm","thumb":"images/花境设计/f124 藿香蓟.jpg"},
+{"id":"f125","name":"石竹","habitat":["开阔绿地","林缘"],"role":"自由浮动-特约散点植物","height":"20-30cm","lifespan":"多年生","color":["粉","白","红","紫"],"bloom":"5-6","crown":"20-35cm","thumb":"images/花境设计/f125 石竹.jpg"},
+{"id":"f126","name":"香雪球","habitat":"开阔绿地","role":"自由浮动-特约散点植物","height":"20-30cm","lifespan":"一年生","color":["白"],"bloom":"5-8","crown":"20-35cm","thumb":"images/花境设计/f126 香雪球.jpg"},
+{"id":"f127","name":"黄花鸢尾（黄菖蒲）","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-70cm","lifespan":"多年生","color":["黄"],"bloom":"5","crown":"30-40cm","thumb":"images/花境设计/f127 黄花鸢尾（黄菖蒲）.jpg"},
+{"id":"f128","name":"黄芩","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-50cm","lifespan":"多年生","color":["蓝紫"],"bloom":"7-8","crown":"30-50cm","thumb":"images/花境设计/f128 黄芩.jpg"},
+{"id":"f129","name":"丹参","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-80cm","lifespan":"多年生","color":["蓝紫"],"bloom":"4-8","crown":"30-50cm","thumb":"images/花境设计/f129 丹参.jpg"},
+{"id":"f130","name":"‘夏日浆果’千叶蓍","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"30-40cm","lifespan":"多年生","color":["粉","紫","紫红"],"bloom":"5-7","crown":"30-40cm","thumb":"images/花境设计/f130 夏日浆果千叶蓍.jpg"},
+{"id":"f131","name":"美丽飞蓬","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"40-60cm","lifespan":"多年生","color":["蓝紫"],"bloom":"6-8","crown":"30-45cm","thumb":"images/花境设计/f131 美丽飞蓬.jpg"},
+{"id":"f132","name":"黄花菜","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"80-150cm","lifespan":"多年生","color":["黄"],"bloom":"5-9","crown":"60-80cm","thumb":"images/花境设计/f132 黄花菜.jpg"},
+{"id":"f133","name":"小花飞燕草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"35-65cm","lifespan":"一年生","color":["蓝"],"bloom":"5-7","crown":"30-40cm","thumb":"images/花境设计/f133 小花飞燕草.jpg"},
+{"id":"f134","name":"羽扇豆","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"40-80cm","lifespan":"一年生","color":["红","粉","紫","蓝","白"],"bloom":"5-6","crown":"30-50cm","thumb":"images/花境设计/f134 羽扇豆.jpg"},
+{"id":"f135","name":"山丹百合","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-50cm","lifespan":"多年生","color":["红"],"bloom":"6-8","crown":"20-30cm","thumb":"images/花境设计/f135 山丹百合.jpg"},
+{"id":"f136","name":"黄金喷泉绣线菊","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"80-150cm","lifespan":"多年生","color":["白"],"bloom":"5-6","crown":"60-120cm","thumb":"images/花境设计/f136 黄金喷泉绣线菊.jpg"},
+{"id":"f137","name":"银灰鼠尾草","habitat":"开阔绿地","role":"卫星锚点-配角伴生植物","height":"25-35cm","lifespan":"一年生","color":["灰白"],"bloom":"7-8","crown":"30-40cm","thumb":"images/花境设计/f137 银灰鼠尾草.jpg"},
+{"id":"f138","name":"知母","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-50cm","lifespan":"多年生","color":["粉白"],"bloom":"6-7","crown":"25-30cm","thumb":"images/花境设计/f138 知母.jpg"},
+{"id":"f139","name":"红脉酸模","habitat":["开阔绿地","林缘"],"role":"卫星锚点-配角伴生植物","height":"30-45cm","lifespan":"多年生","color":["绿"],"bloom":"4-9","crown":"30-45cm","thumb":"images/花境设计/f139 红脉酸模.jpg"},
+{"id":"f140","name":"‘京西’野古草","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"80-130cm","lifespan":"多年生","color":["绿"],"bloom":"8-10","crown":"40-60cm","thumb":"images/花境设计/f140 京西野古草.jpg"},
+{"id":"f141","name":"细茎针茅","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"30-50cm","lifespan":"多年生","color":["绿"],"bloom":"6-8","crown":"20-35cm","thumb":"images/花境设计/f141 细茎针茅.jpg"},
+{"id":"f142","name":"沙画眉草","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"80-120cm","lifespan":"多年生","color":["绿"],"bloom":"7-10","crown":"50-80cm","thumb":"images/花境设计/f142 沙画眉草.jpg"},
+{"id":"f143","name":"蓝画眉","habitat":["开阔绿地","林缘"],"role":"基质锚点-群演填充植物","height":"80-120cm","lifespan":"多年生","color":["绿"],"bloom":"7-10","crown":"50-80cm","thumb":"images/花境设计/f143 蓝画眉.jpg"},
+{"id":"f144","name":"铃兰","habitat":["林缘","林地"],"role":"基质锚点-群演填充植物","height":"15-30cm","lifespan":"多年生","color":["白"],"bloom":"5-6","crown":"20-30cm","thumb":"images/花境设计/f144 铃兰.jpg"},
+{"id":"f145","name":"木茼蒿","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"30-50cm","lifespan":"一年生","color":["橙","黄","紫","白","红"],"bloom":"5-10","crown":"30-40cm","thumb":"images/花境设计/f145 木茼蒿.jpg"},
+{"id":"f146","name":"钓钟柳","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"30-40cm","lifespan":"多年生","color":["紫","白","粉","黄"],"bloom":"4-5","crown":"25-35cm","thumb":"images/花境设计/f146 钓钟柳.jpg"},
+{"id":"f147","name":"三七景天","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"10-15cm","lifespan":"多年生","color":["黄"],"bloom":"5-6","crown":"20-25cm","thumb":"images/花境设计/f147 三七景天.jpg"},
+{"id":"f148","name":"迷迭香","habitat":"开阔绿地","role":"基质锚点-群演填充植物","height":"40-80cm","lifespan":"多年生","color":["淡紫"],"bloom":"4-6","crown":"30-50cm","thumb":"images/花境设计/f148 迷迭香.jpg"},
+{"id":"f149","name":"白毛马鞭草","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"80-120cm","lifespan":"多年生","color":["蓝紫"],"bloom":"6-8","crown":"50-80cm","thumb":"images/花境设计/f149 白毛马鞭草.jpg"},
+{"id":"f150","name":"芦竹","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"300-600cm","lifespan":"多年生","color":["绿"],"bloom":"9-12","crown":"100-200cm","thumb":"images/花境设计/f150 芦竹.jpg"},
+{"id":"f151","name":"大油芒","habitat":["开阔绿地","林缘"],"role":"结构锚点-空间定位植物","height":"60-150cm","lifespan":"多年生","color":["绿"],"bloom":"7-10","crown":"60-120cm","thumb":"images/花境设计/f151 大油芒.jpg"},
+{"id":"f152","name":"长序芒","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"150-180cm","lifespan":"多年生","color":["白"],"bloom":"8-10","crown":"60-120cm","thumb":"images/花境设计/f152 长序芒.jpg"},
+{"id":"f153","name":"荻","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"200-270cm","lifespan":"多年生","color":["绿"],"bloom":"9-10","crown":"60-120cm","thumb":"images/花境设计/f153 荻.jpg"},
+{"id":"f154","name":"花椒","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"300-500cm","lifespan":"小乔木","color":["绿"],"bloom":"4-5，8-9","crown":"200-250cm","thumb":"images/花境设计/f154 花椒.jpg"},
+{"id":"f155","name":"土木香","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-150cm","lifespan":"多年生","color":["黄"],"bloom":"6-9","crown":"50-80cm","thumb":"images/花境设计/f155 土木香.jpg"},
+{"id":"f156","name":"大花飞燕草","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"70-180cm","lifespan":"一年生","color":["粉","白","蓝紫"],"bloom":"5-7","crown":"30-50cm","thumb":"images/花境设计/f156 大花飞燕草.jpg"},
+{"id":"f157","name":"龙舌兰","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-120cm","lifespan":"多年生","color":["绿"],"bloom":"5-6","crown":"80-150cm","thumb":"images/花境设计/f157 龙舌兰.jpg"},
+{"id":"f158","name":"美洲龙舌兰","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-120cm","lifespan":"多年生","color":["绿"],"bloom":"5-6","crown":"80-150cm","thumb":"images/花境设计/f158 美洲龙舌兰.jpg"}
 ];
 
 // ======================= 预设方案数据 =======================
