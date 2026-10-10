@@ -365,6 +365,60 @@ tr:hover{
 .bloom-table th{
   font-weight:600;
 }
+
+/* ===== 新增：苗木意向照片模块 ===== */
+.photo-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:22px;
+  margin-bottom:8px;
+}
+.photo-item{
+  text-align:center;
+  background:#f9fafb;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  transition:box-shadow 0.2s, transform 0.2s;
+}
+.photo-item:hover{
+  box-shadow:0 10px 22px rgba(37,99,235,.12);
+  transform:translateY(-2px);
+}
+.photo-thumb{
+  width:100%;
+  aspect-ratio:4 / 3;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#eef2f7;
+  cursor:pointer;
+  display:block;
+  transition:opacity 0.2s;
+}
+.photo-thumb:hover{
+  opacity:0.88;
+}
+.photo-thumb.img-error{
+  opacity:0.35;
+  cursor:not-allowed;
+}
+.photo-name{
+  margin-top:10px;
+  font-size:14px;
+  font-weight:600;
+  color:var(--text);
+  text-align:center;
+  word-break:break-all;
+  line-height:1.4;
+}
+@media (max-width:900px){
+  .photo-grid{ grid-template-columns:repeat(2, 1fr); gap:16px; }
+}
+@media (max-width:520px){
+  .photo-grid{ grid-template-columns:1fr; }
+}
+
 .image-modal {
   display: none;
   position: fixed;
@@ -480,6 +534,7 @@ footer{
       <div id="pdfContent">
         <div id="designOutput" class="card hidden"></div>
         <div id="designBloom" class="card hidden"></div>
+        <div id="designPhotos" class="card hidden"></div>
       </div>
       <div id="seedlingSection" class="card hidden">
         <h2 class="card-title" id="seedlingTitle">苗木表</h2>
@@ -496,7 +551,7 @@ footer{
     </div>
   </div>
   <footer>
-    <div>© Twolobster ｜ Flower Border Design & Management System | Data updated: Oct 2026 | v6.0 </div>
+    <div>© Twolobster ｜ Flower Border Design & Management System | Data updated: Oct 2026 | v7.0 </div>
     <div style="margin-top: 20px;">
       <img src="https://visitor-badge.laobi.icu/badge?page_id=twolobster_fbdms" alt="visitor badge" />
     </div>
@@ -817,8 +872,77 @@ function renderSelectionTable() {
   syncTotalPercent();
 }
 function toggleFlowerSelection(cb) { let id=cb.dataset.id; if(cb.checked) selectedFlowerIds.add(id); else selectedFlowerIds.delete(id); renderSelectionTable(); syncTotalPercent(); }
-function generateMyDesign() { if(selectedFlowerIds.size===0){alert("请至少选择一个植物");return;} const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id)); const out=document.getElementById("designOutput"); out.classList.remove("hidden"); let html=`<h3 class="section-title">花卉清单</h3><div class="table-container"><table><thead><tr><th>名称</th><th>生境</th><th>角色</th><th>开花高度</th><th>花色</th><th>花期</th></tr></thead><tbody>`; plants.forEach(f=>{ const cr=plantCustomData.get(f.id)?.customRole||f.role; const ch=Array.isArray(f.color)?f.color.map(c=>`<span class="color-dot" style="background-color:${mapColorToCss(c)}"></span>${c}`).join(", "):`<span class="color-dot" style="background-color:${mapColorToCss(f.color)}"></span>${f.color}`; html+=`<tr><td>${f.name}</td><td>${Array.isArray(f.habitat)?f.habitat.join(", "):f.habitat}</td><td>${cr}</td><td>${f.height}</td><td>${ch}</td><td>${f.bloom}</td></tr>`; }); html+=`</tbody></table></div>`; const roleMap={}; ROLE_OPTIONS.forEach(r=>roleMap[r]=[]); plants.forEach(f=>{ let cr=plantCustomData.get(f.id)?.customRole||f.role; if(roleMap[cr]) roleMap[cr].push(f); }); let roleHtml='<div class="role-analysis">'; ROLE_OPTIONS.forEach(r=>{ let arr=roleMap[r]||[]; roleHtml+=`<div class="analysis-card"><h4>${r.split('-')[1]}<span class="count">${arr.length}</span></h4>${arr.length>0?'<ul class="analysis-list">'+arr.map(it=>`<li>${it.name}</li>`).join('')+'</ul>':'<div class="muted">（无）</div>'}</div>`; }); roleHtml+='</div>'; const colorMap={}; plants.forEach(f=>{ let cols=Array.isArray(f.color)?f.color:[f.color]; cols.forEach(c=>{if(!colorMap[c])colorMap[c]=[]; colorMap[c].push(f.name);});}); let colorHtml='<div class="color-analysis">'; for(let c in colorMap) colorHtml+=`<div class="analysis-card"><h4><span class="color-dot" style="background-color:${mapColorToCss(c)}"></span> ${c}<span class="count">${colorMap[c].length}</span></h4><ul class="analysis-list">${colorMap[c].map(n=>`<li>${n}</li>`).join('')}</ul></div>`; colorHtml+='</div>'; out.innerHTML=html+'<h3 class="section-title">角色分析</h3>'+roleHtml+'<h3 class="section-title">颜色统计</h3>'+colorHtml; generateBloomTable(plants,"designBloom"); document.getElementById("designBloom").classList.remove("hidden"); alert("✅ 设计清单已生成！"); document.getElementById("designOutput").scrollIntoView({behavior:"smooth",block:"start"}); }
+
+function generateMyDesign() {
+  if(selectedFlowerIds.size===0){alert("请至少选择一个植物");return;}
+  const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id));
+  const out=document.getElementById("designOutput");
+  out.classList.remove("hidden");
+  let html=`<h3 class="section-title">花卉清单</h3><div class="table-container"><table><thead><tr><th>名称</th><th>生境</th><th>角色</th><th>开花高度</th><th>花色</th><th>花期</th></tr></thead><tbody>`;
+  plants.forEach(f=>{
+    const cr=plantCustomData.get(f.id)?.customRole||f.role;
+    const ch=Array.isArray(f.color)?f.color.map(c=>`<span class="color-dot" style="background-color:${mapColorToCss(c)}"></span>${c}`).join(", "):`<span class="color-dot" style="background-color:${mapColorToCss(f.color)}"></span>${f.color}`;
+    html+=`<tr><td>${f.name}</td><td>${Array.isArray(f.habitat)?f.habitat.join(", "):f.habitat}</td><td>${cr}</td><td>${f.height}</td><td>${ch}</td><td>${f.bloom}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  const roleMap={};
+  ROLE_OPTIONS.forEach(r=>roleMap[r]=[]);
+  plants.forEach(f=>{ let cr=plantCustomData.get(f.id)?.customRole||f.role; if(roleMap[cr]) roleMap[cr].push(f); });
+  let roleHtml='<div class="role-analysis">';
+  ROLE_OPTIONS.forEach(r=>{ let arr=roleMap[r]||[]; roleHtml+=`<div class="analysis-card"><h4>${r.split('-')[1]}<span class="count">${arr.length}</span></h4>${arr.length>0?'<ul class="analysis-list">'+arr.map(it=>`<li>${it.name}</li>`).join('')+'</ul>':'<div class="muted">（无）</div>'}</div>`; });
+  roleHtml+='</div>';
+  const colorMap={};
+  plants.forEach(f=>{ let cols=Array.isArray(f.color)?f.color:[f.color]; cols.forEach(c=>{if(!colorMap[c])colorMap[c]=[]; colorMap[c].push(f.name);});});
+  let colorHtml='<div class="color-analysis">';
+  for(let c in colorMap) colorHtml+=`<div class="analysis-card"><h4><span class="color-dot" style="background-color:${mapColorToCss(c)}"></span> ${c}<span class="count">${colorMap[c].length}</span></h4><ul class="analysis-list">${colorMap[c].map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
+  colorHtml+='</div>';
+  out.innerHTML=html+'<h3 class="section-title">角色分析</h3>'+roleHtml+'<h3 class="section-title">颜色统计</h3>'+colorHtml;
+
+  generateBloomTable(plants,"designBloom");
+  document.getElementById("designBloom").classList.remove("hidden");
+
+  // ===== 新增：苗木意向照片模块 =====
+  renderPhotoGallery(plants,"designPhotos");
+  document.getElementById("designPhotos").classList.remove("hidden");
+
+  alert("✅ 设计清单已生成！");
+  document.getElementById("designOutput").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function generateBloomTable(list, cid) { list.sort((a,b)=>parseMonths(a.bloom)[0]-parseMonths(b.bloom)[0]); let html=`<h3 class="section-title">花期花色展示图（1月 - 12月）</h3><div class="table-container"><table class="bloom-table"><thead><tr><th class="bloom-name">植物</th>`; for(let i=1;i<=12;i++) html+=`<th>${i}月</th>`; html+=`</tr></thead><tbody>`; list.forEach(f=>{ let mons=parseMonths(f.bloom); html+=`<tr><td class="bloom-name">${f.name}</td>`; for(let i=1;i<=12;i++){ let ok=mons.includes(i); let bg=ok?mapColorToCss(Array.isArray(f.color)?f.color[0]:f.color):''; html+=`<td style="background-color:${bg}; color:${ok?'white':'inherit'};">${ok?"●":""}</td>`; } html+=`</tr>`; }); html+=`</tbody></table></div>`; document.getElementById(cid).innerHTML=html; }
+
+// ===== 新增：渲染苗木意向照片（每行4个，名称居中，点击放大） =====
+function renderPhotoGallery(list, cid) {
+  const container = document.getElementById(cid);
+  if(!container) return;
+  let html = `<h3 class="section-title">苗木意向照片</h3><div class="photo-grid">`;
+  list.forEach(f => {
+    const src = f.thumb || '';
+    html += `<div class="photo-item">
+        <img class="photo-thumb" src="${src}" alt="${f.name}" title="点击查看大图"
+             data-name="${f.name}" data-img="${src}"
+             onerror="this.classList.add('img-error');this.title='图片缺失';">
+        <div class="photo-name">${f.name}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+
+  container.querySelectorAll('.photo-thumb').forEach(img => {
+    img.addEventListener('click', function(){
+      if(this.classList.contains('img-error')){
+        alert('暂无图片');
+        return;
+      }
+      const src = this.getAttribute('data-img');
+      const name = this.getAttribute('data-name');
+      if(!src){ alert('暂无图片'); return; }
+      document.getElementById('modalImage').src = src;
+      document.getElementById('modalPlantName').innerText = name;
+      document.getElementById('imageModal').style.display = 'flex';
+    });
+  });
+}
 
 // ----- 重置选择：彻底恢复所有数据至初设状态 -----
 function resetMyDesign() {
@@ -837,6 +961,8 @@ function resetMyDesign() {
   document.getElementById("designOutput").innerHTML = "";
   document.getElementById("designOutput").classList.add("hidden");
   document.getElementById("designBloom").classList.add("hidden");
+  document.getElementById("designPhotos").innerHTML = "";
+  document.getElementById("designPhotos").classList.add("hidden");
   document.getElementById("seedlingSection").classList.add("hidden");
   // 重置预设下拉框到空状态
   document.getElementById('presetSchemeSelect').value = '';
@@ -846,228 +972,228 @@ function resetMyDesign() {
 function saveStateToFile() { const state={version:"4.3",selectedFlowerIds:Array.from(selectedFlowerIds),plantCustomData:Array.from(plantCustomData.entries())}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'})); a.download=`花境方案_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href); }
 function triggerLoadFile() { document.getElementById('loadStateFileInput').click(); }
 function loadStateFromFile(file) { const r=new FileReader(); r.onload=e=>{ try{ const s=JSON.parse(e.target.result); if(s.version && s.selectedFlowerIds){ selectedFlowerIds=new Set(s.selectedFlowerIds); if(s.plantCustomData) plantCustomData=new Map(s.plantCustomData); else initCustomData(); // 确保旧数据有crownSpec
-          plantCustomData.forEach((v,k)=>{ if(!v.crownSpec) v.crownSpec='35-50'; });
-          renderSelectionTable();
-          if(selectedFlowerIds.size>0) generateMyDesign(); else resetMyDesign();
-          alert("加载成功");
-        } else alert("格式错误");
-      } catch(err){alert("失败");}
-    };
-    r.readAsText(file);
-  }
-  function generateSeedlingTable() {
-    if(currentUser?.role==='normal'){ alert("普通用户无权限生成苗木表"); return; }
-    const total= syncTotalPercent();
-    if(Math.abs(total-100)>0.01){ alert(`设计占比总和为${total}%，必须为100%才能生成苗木表！`); return; }
-    const area=parseFloat(document.getElementById('projectArea').value)||0;
-    if(area<=0){ alert("请填写有效的花境面积"); return; }
-    const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id));
-    let rows=[];
-    plants.forEach(f=>{
-      let c=plantCustomData.get(f.id);
-      if(c && c.percentage>0){
-        let p=c.percentage, a=(p/100)*area, d=c.density, q=Math.round(a*d);
-        // 计算规格
-        let xx = (d===36||d===25)?15 : (d===16?18 : 22);
-        let zz = c.crownSpec || '35-50';
-        let yy = (xx===15)?'15-20' : (xx===18?'20-25':'25-30');
-        let spec = `盆径${xx}cm，冠幅${yy}cm，高度${zz}cm`;
-        rows.push({id:f.id, name:f.name, role:c.customRole, density:d, percent:p, area:a, quantity:q, thumb:f.thumb, spec:spec});
-      }
+        plantCustomData.forEach((v,k)=>{ if(!v.crownSpec) v.crownSpec='35-50'; });
+        renderSelectionTable();
+        if(selectedFlowerIds.size>0) generateMyDesign(); else resetMyDesign();
+        alert("加载成功");
+      } else alert("格式错误");
+    } catch(err){alert("失败");}
+  };
+  r.readAsText(file);
+}
+function generateSeedlingTable() {
+  if(currentUser?.role==='normal'){ alert("普通用户无权限生成苗木表"); return; }
+  const total= syncTotalPercent();
+  if(Math.abs(total-100)>0.01){ alert(`设计占比总和为${total}%，必须为100%才能生成苗木表！`); return; }
+  const area=parseFloat(document.getElementById('projectArea').value)||0;
+  if(area<=0){ alert("请填写有效的花境面积"); return; }
+  const plants=FLOWER_DB.filter(f=>selectedFlowerIds.has(f.id));
+  let rows=[];
+  plants.forEach(f=>{
+    let c=plantCustomData.get(f.id);
+    if(c && c.percentage>0){
+      let p=c.percentage, a=(p/100)*area, d=c.density, q=Math.round(a*d);
+      // 计算规格
+      let xx = (d===36||d===25)?15 : (d===16?18 : 22);
+      let zz = c.crownSpec || '35-50';
+      let yy = (xx===15)?'15-20' : (xx===18?'20-25':'25-30');
+      let spec = `盆径${xx}cm，冠幅${yy}cm，高度${zz}cm`;
+      rows.push({id:f.id, name:f.name, role:c.customRole, density:d, percent:p, area:a, quantity:q, thumb:f.thumb, spec:spec});
+    }
+  });
+  rows.sort((a,b)=>a.role.localeCompare(b.role));
+  let idx=1, pName=document.getElementById('projectName').value||"花境项目";
+  let tableHtml=`<table class="seedling-table" id="seedlingDetailTable"><thead><tr><th>序号</th><th>品种</th><th>角色</th><th>数量（株）</th><th>面积（平米）</th><th>种植密度（株/平米）</th><th>规格</th><th>占比 %</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    tableHtml+=`<tr><td>${idx++}</td><td class="clickable-plant" data-name="${r.name}" data-img="${r.thumb||''}">${r.name}</td><td>${r.role}</td><td>${r.quantity}</td><td>${r.area.toFixed(1)}</td><td>${r.density}</td><td>${r.spec}</td><td>${r.percent}</td></tr>`;
+  });
+  tableHtml+=`</tbody></table>`;
+  document.getElementById('seedlingTableContainer').innerHTML=`<h3>${pName} · 苗木表</h3>`+tableHtml;
+  document.getElementById('seedlingSection').classList.remove("hidden");
+  document.querySelectorAll('.clickable-plant').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      let img=el.getAttribute('data-img'), name=el.getAttribute('data-name');
+      if(img){ document.getElementById('modalImage').src=img; document.getElementById('modalPlantName').innerText=name; document.getElementById('imageModal').style.display='flex'; }
+      else alert('暂无图片');
     });
-    rows.sort((a,b)=>a.role.localeCompare(b.role));
-    let idx=1, pName=document.getElementById('projectName').value||"花境项目";
-    let tableHtml=`<table class="seedling-table" id="seedlingDetailTable"><thead><tr><th>序号</th><th>品种</th><th>角色</th><th>数量（株）</th><th>面积（平米）</th><th>种植密度（株/平米）</th><th>规格</th><th>占比 %</th></tr></thead><tbody>`;
-    rows.forEach(r=>{
-      tableHtml+=`<tr><td>${idx++}</td><td class="clickable-plant" data-name="${r.name}" data-img="${r.thumb||''}">${r.name}</td><td>${r.role}</td><td>${r.quantity}</td><td>${r.area.toFixed(1)}</td><td>${r.density}</td><td>${r.spec}</td><td>${r.percent}</td></tr>`;
-    });
-    tableHtml+=`</tbody></table>`;
-    document.getElementById('seedlingTableContainer').innerHTML=`<h3>${pName} · 苗木表</h3>`+tableHtml;
-    document.getElementById('seedlingSection').classList.remove("hidden");
-    document.querySelectorAll('.clickable-plant').forEach(el=>{
-      el.addEventListener('click',(e)=>{
-        e.stopPropagation();
-        let img=el.getAttribute('data-img'), name=el.getAttribute('data-name');
-        if(img){ document.getElementById('modalImage').src=img; document.getElementById('modalPlantName').innerText=name; document.getElementById('imageModal').style.display='flex'; }
-        else alert('暂无图片');
-      });
-    });
-  }
-  function exportExcel() {
-    if(currentUser?.role==='normal'){ alert("普通用户无权限导出Excel"); return; }
-    const tbl=document.querySelector('#seedlingDetailTable');
-    if(!tbl){ alert("请先生成苗木表"); return; }
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.table_to_sheet(tbl,{raw:true});
-    ws['!cols']=[{wch:6},{wch:18},{wch:22},{wch:12},{wch:12},{wch:16},{wch:20},{wch:10}];
-    XLSX.utils.book_append_sheet(wb,ws,"苗木表");
-    XLSX.writeFile(wb,`${document.getElementById('projectName').value||"花境"}_苗木表.xlsx`);
-  }
-  function closeImageModal() { document.getElementById('imageModal').style.display='none'; }
+  });
+}
+function exportExcel() {
+  if(currentUser?.role==='normal'){ alert("普通用户无权限导出Excel"); return; }
+  const tbl=document.querySelector('#seedlingDetailTable');
+  if(!tbl){ alert("请先生成苗木表"); return; }
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.table_to_sheet(tbl,{raw:true});
+  ws['!cols']=[{wch:6},{wch:18},{wch:22},{wch:12},{wch:12},{wch:16},{wch:20},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws,"苗木表");
+  XLSX.writeFile(wb,`${document.getElementById('projectName').value||"花境"}_苗木表.xlsx`);
+}
+function closeImageModal() { document.getElementById('imageModal').style.display='none'; }
 
-  // ======================= 预设方案加载函数 =======================
-  function applyPresetScheme(schemeKey) {
-    if (!schemeKey) return;
-    const scheme = PRESET_SCHEMES[schemeKey];
-    if (!scheme) return;
-    // 清空并设置选中ID
-    selectedFlowerIds = new Set(scheme.selectedFlowerIds);
-    // 重建 plantCustomData
-    const newMap = new Map();
-    // 先初始化所有品种数据（保持默认），再覆盖方案中有配置的
-    FLOWER_DB.forEach(f => {
-      newMap.set(f.id, {
-        customRole: f.role,
-        density: 25,
-        percentage: 0,
-        crownSpec: '35-50'
-      });
+// ======================= 预设方案加载函数 =======================
+function applyPresetScheme(schemeKey) {
+  if (!schemeKey) return;
+  const scheme = PRESET_SCHEMES[schemeKey];
+  if (!scheme) return;
+  // 清空并设置选中ID
+  selectedFlowerIds = new Set(scheme.selectedFlowerIds);
+  // 重建 plantCustomData
+  const newMap = new Map();
+  // 先初始化所有品种数据（保持默认），再覆盖方案中有配置的
+  FLOWER_DB.forEach(f => {
+    newMap.set(f.id, {
+      customRole: f.role,
+      density: 25,
+      percentage: 0,
+      crownSpec: '35-50'
     });
-    // 覆盖方案数据
-    scheme.plantCustomData.forEach(([id, data]) => {
-      if (newMap.has(id)) {
-        const existing = newMap.get(id);
-        Object.assign(existing, data);
-      }
-    });
-    plantCustomData = newMap;
-    // 刷新表格
-    renderSelectionTable();
-    alert(`已加载预设方案“${scheme.name}”，请点击“生成设计清单”查看效果。`);
-  }
+  });
+  // 覆盖方案数据
+  scheme.plantCustomData.forEach(([id, data]) => {
+    if (newMap.has(id)) {
+      const existing = newMap.get(id);
+      Object.assign(existing, data);
+    }
+  });
+  plantCustomData = newMap;
+  // 刷新表格
+  renderSelectionTable();
+  alert(`已加载预设方案“${scheme.name}”，请点击“生成设计清单”查看效果。`);
+}
 
-  // ======================= 登录逻辑与权限控制 =======================
-  function disableMainContent(disabled) {
-    const main = document.getElementById('mainContent');
-    if(disabled) { main.classList.add('disabled'); document.body.classList.add('modal-open'); }
-    else { main.classList.remove('disabled'); document.body.classList.remove('modal-open'); }
+// ======================= 登录逻辑与权限控制 =======================
+function disableMainContent(disabled) {
+  const main = document.getElementById('mainContent');
+  if(disabled) { main.classList.add('disabled'); document.body.classList.add('modal-open'); }
+  else { main.classList.remove('disabled'); document.body.classList.remove('modal-open'); }
+}
+function saveLoginState(remember, user) {
+  const data = { username: user.username, role: user.role, timestamp: Date.now() };
+  if(remember) {
+    let expiryDays = (user.role === 'admin') ? 30 : 7;
+    data.expiry = Date.now() + expiryDays * 24 * 3600 * 1000;
+    localStorage.setItem('fbdms_login', JSON.stringify(data));
+  } else {
+    sessionStorage.setItem('fbdms_login', JSON.stringify(data));
   }
-  function saveLoginState(remember, user) {
-    const data = { username: user.username, role: user.role, timestamp: Date.now() };
-    if(remember) {
-      let expiryDays = (user.role === 'admin') ? 30 : 7;
-      data.expiry = Date.now() + expiryDays * 24 * 3600 * 1000;
-      localStorage.setItem('fbdms_login', JSON.stringify(data));
+}
+function clearLoginState() { localStorage.removeItem('fbdms_login'); sessionStorage.removeItem('fbdms_login'); }
+function tryAutoLogin() {
+  let stored = localStorage.getItem('fbdms_login');
+  let isSession = false;
+  if(!stored) { stored = sessionStorage.getItem('fbdms_login'); if(stored) isSession=true; }
+  if(stored) {
+    try {
+      const data = JSON.parse(stored);
+      if(data.expiry && Date.now() > data.expiry) { clearLoginState(); return false; }
+      const user = users.find(u=>u.username===data.username);
+      if(user) { currentUser = { username: user.username, role: user.role }; return true; }
+    } catch(e) {}
+  }
+  return false;
+}
+function onLoginSuccess(user, remember) {
+  currentUser = { username: user.username, role: user.role };
+  saveLoginState(remember, currentUser);
+  document.getElementById('loginOverlay').style.display = 'none';
+  disableMainContent(false);
+  applyRoleBasedUI();
+  renderSelectionTable();
+}
+function applyRoleBasedUI() {
+  const genBtn = document.getElementById('genSeedlingBtn');
+  const expBtn = document.getElementById('exportExcelBtn');
+  if(currentUser?.role === 'normal') {
+    genBtn.disabled = true; expBtn.disabled = true;
+    genBtn.title = "普通用户无权限"; expBtn.title = "普通用户无权限";
+  } else {
+    genBtn.disabled = false; expBtn.disabled = false;
+    genBtn.title = ""; expBtn.title = "";
+  }
+}
+function attemptLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errorDiv = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  if(lockUntil > Date.now()) {
+    const remain = Math.ceil((lockUntil - Date.now())/1000);
+    errorDiv.innerHTML = `尝试次数过多，请等待 ${remain} 秒`;
+    return;
+  }
+  const user = users.find(u=>u.username===username && u.password===password);
+  if(user) {
+    failCount = 0; errorDiv.innerHTML = '';
+    const remember = document.getElementById('rememberCheckbox').checked;
+    onLoginSuccess(user, remember);
+  } else {
+    failCount++;
+    if(failCount >= 5) {
+      lockUntil = Date.now() + 30000;
+      errorDiv.innerHTML = `密码错误次数过多，请等待30秒`;
+      loginBtn.disabled = true;
+      let remaining = 30;
+      if(countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(()=>{
+        remaining--;
+        if(remaining<=0) { clearInterval(countdownInterval); loginBtn.disabled=false; errorDiv.innerHTML=''; }
+        else errorDiv.innerHTML = `失败次数过多，请等待 ${remaining} 秒`;
+      },1000);
     } else {
-      sessionStorage.setItem('fbdms_login', JSON.stringify(data));
+      errorDiv.innerHTML = `用户名或密码错误，剩余尝试次数: ${5-failCount}`;
     }
   }
-  function clearLoginState() { localStorage.removeItem('fbdms_login'); sessionStorage.removeItem('fbdms_login'); }
-  function tryAutoLogin() {
-    let stored = localStorage.getItem('fbdms_login');
-    let isSession = false;
-    if(!stored) { stored = sessionStorage.getItem('fbdms_login'); if(stored) isSession=true; }
-    if(stored) {
-      try {
-        const data = JSON.parse(stored);
-        if(data.expiry && Date.now() > data.expiry) { clearLoginState(); return false; }
-        const user = users.find(u=>u.username===data.username);
-        if(user) { currentUser = { username: user.username, role: user.role }; return true; }
-      } catch(e) {}
-    }
-    return false;
+}
+function logoutWithConfirm() {
+  if(confirm("确定要注销登录吗？您将需要重新登录才能使用系统。")) {
+    clearLoginState();
+    currentUser = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    disableMainContent(true);
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').innerHTML = '';
+    failCount = 0; lockUntil = 0;
+    if(countdownInterval) clearInterval(countdownInterval);
+    document.getElementById('loginBtn').disabled = false;
+    resetMyDesign();
   }
-  function onLoginSuccess(user, remember) {
-    currentUser = { username: user.username, role: user.role };
-    saveLoginState(remember, currentUser);
+}
+
+// 绑定事件
+document.addEventListener("DOMContentLoaded", () => {
+  if(tryAutoLogin()) {
     document.getElementById('loginOverlay').style.display = 'none';
     disableMainContent(false);
     applyRoleBasedUI();
     renderSelectionTable();
+  } else {
+    disableMainContent(true);
   }
-  function applyRoleBasedUI() {
-    const genBtn = document.getElementById('genSeedlingBtn');
-    const expBtn = document.getElementById('exportExcelBtn');
-    if(currentUser?.role === 'normal') {
-      genBtn.disabled = true; expBtn.disabled = true;
-      genBtn.title = "普通用户无权限"; expBtn.title = "普通用户无权限";
-    } else {
-      genBtn.disabled = false; expBtn.disabled = false;
-      genBtn.title = ""; expBtn.title = "";
+  document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+  document.getElementById('logoutBtn').addEventListener('click', logoutWithConfirm);
+  document.getElementById('genListBtn').addEventListener('click', generateMyDesign);
+  document.getElementById('resetBtn').addEventListener('click', resetMyDesign);
+  document.getElementById('saveSchemeBtn').addEventListener('click', saveStateToFile);
+  document.getElementById('loadSchemeBtn').addEventListener('click', triggerLoadFile);
+  document.getElementById('exportPdfBtn').addEventListener('click', ()=>{ const el=document.getElementById("pdfContent"); if(!el||el.innerText.trim()==="") alert("请先生成设计清单"); else html2pdf().set({margin:10,filename:'花境设计方案.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save(); });
+  document.getElementById('quickDownBtn').addEventListener('click', ()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
+  document.getElementById('quickUpBottomBtn').addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  document.getElementById('genSeedlingBtn').addEventListener('click', generateSeedlingTable);
+  document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+  // 预设方案选择事件
+  document.getElementById('presetSchemeSelect').addEventListener('change', function(e) {
+    const val = this.value;
+    if (val) {
+      applyPresetScheme(val);
     }
-  }
-  function attemptLogin() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    const errorDiv = document.getElementById('loginError');
-    const loginBtn = document.getElementById('loginBtn');
-    if(lockUntil > Date.now()) {
-      const remain = Math.ceil((lockUntil - Date.now())/1000);
-      errorDiv.innerHTML = `尝试次数过多，请等待 ${remain} 秒`;
-      return;
-    }
-    const user = users.find(u=>u.username===username && u.password===password);
-    if(user) {
-      failCount = 0; errorDiv.innerHTML = '';
-      const remember = document.getElementById('rememberCheckbox').checked;
-      onLoginSuccess(user, remember);
-    } else {
-      failCount++;
-      if(failCount >= 5) {
-        lockUntil = Date.now() + 30000;
-        errorDiv.innerHTML = `密码错误次数过多，请等待30秒`;
-        loginBtn.disabled = true;
-        let remaining = 30;
-        if(countdownInterval) clearInterval(countdownInterval);
-        countdownInterval = setInterval(()=>{
-          remaining--;
-          if(remaining<=0) { clearInterval(countdownInterval); loginBtn.disabled=false; errorDiv.innerHTML=''; }
-          else errorDiv.innerHTML = `失败次数过多，请等待 ${remaining} 秒`;
-        },1000);
-      } else {
-        errorDiv.innerHTML = `用户名或密码错误，剩余尝试次数: ${5-failCount}`;
-      }
-    }
-  }
-  function logoutWithConfirm() {
-    if(confirm("确定要注销登录吗？您将需要重新登录才能使用系统。")) {
-      clearLoginState();
-      currentUser = null;
-      document.getElementById('loginOverlay').style.display = 'flex';
-      disableMainContent(true);
-      document.getElementById('loginUsername').value = '';
-      document.getElementById('loginPassword').value = '';
-      document.getElementById('loginError').innerHTML = '';
-      failCount = 0; lockUntil = 0;
-      if(countdownInterval) clearInterval(countdownInterval);
-      document.getElementById('loginBtn').disabled = false;
-      resetMyDesign();
-    }
-  }
-
-  // 绑定事件
-  document.addEventListener("DOMContentLoaded", () => {
-    if(tryAutoLogin()) {
-      document.getElementById('loginOverlay').style.display = 'none';
-      disableMainContent(false);
-      applyRoleBasedUI();
-      renderSelectionTable();
-    } else {
-      disableMainContent(true);
-    }
-    document.getElementById('loginBtn').addEventListener('click', attemptLogin);
-    document.getElementById('logoutBtn').addEventListener('click', logoutWithConfirm);
-    document.getElementById('genListBtn').addEventListener('click', generateMyDesign);
-    document.getElementById('resetBtn').addEventListener('click', resetMyDesign);
-    document.getElementById('saveSchemeBtn').addEventListener('click', saveStateToFile);
-    document.getElementById('loadSchemeBtn').addEventListener('click', triggerLoadFile);
-    document.getElementById('exportPdfBtn').addEventListener('click', ()=>{ const el=document.getElementById("pdfContent"); if(!el||el.innerText.trim()==="") alert("请先生成设计清单"); else html2pdf().set({margin:10,filename:'花境设计方案.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save(); });
-    document.getElementById('quickDownBtn').addEventListener('click', ()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
-    document.getElementById('quickUpBottomBtn').addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
-    document.getElementById('genSeedlingBtn').addEventListener('click', generateSeedlingTable);
-    document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
-    // 预设方案选择事件
-    document.getElementById('presetSchemeSelect').addEventListener('change', function(e) {
-      const val = this.value;
-      if (val) {
-        applyPresetScheme(val);
-      }
-      // 如果选择“请选择”，不做任何事，保留当前数据
-    });
-    const fileInput = document.getElementById('loadStateFileInput');
-    fileInput.addEventListener('change', (e) => { if(e.target.files.length) loadStateFromFile(e.target.files[0]); fileInput.value=''; });
-    document.getElementById('projectArea').addEventListener('input', ()=>syncTotalPercent());
+    // 如果选择“请选择”，不做任何事，保留当前数据
   });
+  const fileInput = document.getElementById('loadStateFileInput');
+  fileInput.addEventListener('change', (e) => { if(e.target.files.length) loadStateFromFile(e.target.files[0]); fileInput.value=''; });
+  document.getElementById('projectArea').addEventListener('input', ()=>syncTotalPercent());
+});
 </script>
 </body>
 </html>
