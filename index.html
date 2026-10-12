@@ -746,6 +746,11 @@ const FLOWER_DB = [
 {"id":"f158","name":"美洲龙舌兰","habitat":"开阔绿地","role":"结构锚点-空间定位植物","height":"60-120cm","lifespan":"多年生","color":["绿"],"bloom":"5-6","crown":"80-150cm","thumb":"images/花境设计/f158 美洲龙舌兰.jpg"}
 ];
 
+// ===== 为每个植物添加意向照片路径 =====
+FLOWER_DB.forEach(f => {
+  f.intentImage = f.thumb.replace('images/花境设计/', 'images/意向照片/');
+});
+
 // ======================= 预设方案数据 =======================
 const PRESET_SCHEMES = {
   scheme1: {
@@ -901,7 +906,7 @@ function generateMyDesign() {
   generateBloomTable(plants,"designBloom");
   document.getElementById("designBloom").classList.remove("hidden");
 
-  // ===== 新增：苗木意向照片模块 =====
+  // ===== 苗木意向照片模块 =====
   renderPhotoGallery(plants,"designPhotos");
   document.getElementById("designPhotos").classList.remove("hidden");
 
@@ -911,13 +916,13 @@ function generateMyDesign() {
 
 function generateBloomTable(list, cid) { list.sort((a,b)=>parseMonths(a.bloom)[0]-parseMonths(b.bloom)[0]); let html=`<h3 class="section-title">花期花色展示图（1月 - 12月）</h3><div class="table-container"><table class="bloom-table"><thead><tr><th class="bloom-name">植物</th>`; for(let i=1;i<=12;i++) html+=`<th>${i}月</th>`; html+=`</tr></thead><tbody>`; list.forEach(f=>{ let mons=parseMonths(f.bloom); html+=`<tr><td class="bloom-name">${f.name}</td>`; for(let i=1;i<=12;i++){ let ok=mons.includes(i); let bg=ok?mapColorToCss(Array.isArray(f.color)?f.color[0]:f.color):''; html+=`<td style="background-color:${bg}; color:${ok?'white':'inherit'};">${ok?"●":""}</td>`; } html+=`</tr>`; }); html+=`</tbody></table></div>`; document.getElementById(cid).innerHTML=html; }
 
-// ===== 新增：渲染苗木意向照片（每行4个，名称居中，点击放大） =====
+// ===== 渲染苗木意向照片（每行4个，名称居中，点击放大） =====
 function renderPhotoGallery(list, cid) {
   const container = document.getElementById(cid);
   if(!container) return;
   let html = `<h3 class="section-title">苗木意向照片</h3><div class="photo-grid">`;
   list.forEach(f => {
-    const src = f.thumb || '';
+    const src = f.intentImage || '';
     html += `<div class="photo-item">
         <img class="photo-thumb" src="${src}" alt="${f.name}" title="点击查看大图"
              data-name="${f.name}" data-img="${src}"
